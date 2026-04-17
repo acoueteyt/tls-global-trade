@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TLS Global Trade — Espace Client</title>
+<style>
+/* ═══════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════ */
+:root {
+  --navy:     #0A1628;
+  --navy-mid: #0D2040;
+  --navy-light:#132847;
+  --steel:    #1A3558;
+  --blue:     #5b8dee;
+  --blue-dim: rgba(91,141,238,0.15);
+  --blue-glow:rgba(91,141,238,0.3);
+  --green:    #10b981;
+  --green-dim:rgba(16,185,129,0.15);
+  --amber:    #f59e0b;
+  --amber-dim:rgba(245,158,11,0.15);
+  --red:      #ef4444;
+  --red-dim:  rgba(239,68,68,0.15);
+  --white:    #ffffff;
+  --pure:     #f4f7fb;
+  --silver:   #a8bdd0;
+  --mist:     #6b8399;
+  --dark:     #060e1c;
+  --sidebar-w:260px;
+  --header-h: 64px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--navy);color:var(--pure);min-height:100vh;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+button{cursor:pointer;border:none;background:none;font-family:inherit;}
+input,textarea,select{font-family:inherit;}
+
+/* ═══════════════════════════════════════════
+   LOGIN PAGE
+═══════════════════════════════════════════ */
+#login-page {
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--dark);
+  position:relative;
+  overflow:hidden;
+}
+#login-page::before {
+  content:'';
+  position:absolute;
+  width:600px;height:600px;
+  background:radial-gradient(circle, rgba(91,141,238,0.08) 0%, transparent 70%);
+  top:-100px;right:-100px;border-radius:50%;
+}
+#login-page::after {
+  content:'';
+  position:absolute;
+  width:400px;height:400px;
+  background:radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%);
+  bottom:-50px;left:-50px;border-radius:50%;
+}
+.login-card {
+  background:var(--navy-mid);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  padding:48px 40px;
+  width:100%;max-width:420px;
+  position:relative;z-index:1;
+  box-shadow:0 24px 60px rgba(0,0,0,0.5);
+}
+.login-logo {
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:32px;justify-content:center;
+}
+.login-logo-globe {
+  width:44px;height:44px;
+  background:linear-gradient(135deg,var(--blue),#3a6ad4);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+}
+.login-logo-text {
+  font-size:1.3rem;font-weight:700;
+  color:var(--white);letter-spacing:0.02em;
+}
+.login-logo-text span{color:var(--blue);}
+.login-role-tabs {
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:2px;background:rgba(255,255,255,0.05);
+  border-radius:8px;padding:3px;margin-bottom:28px;
+}
+.role-tab {
+  padding:10px;text-align:center;border-radius:6px;
+  font-size:0.82rem;font-weight:600;color:var(--silver);
+  transition:all 0.2s;cursor:pointer;
+}
+.role-tab.active{background:var(--blue);color:var(--white);}
+.login-title{font-size:1.4rem;font-weight:700;margin-bottom:6px;text-align:center;}
+.login-sub{font-size:0.85rem;color:var(--silver);text-align:center;margin-bottom:28px;}
+.form-group{margin-bottom:18px;}
+.form-label{display:block;font-size:0.8rem;color:var(--silver);margin-bottom:7px;font-weight:500;letter-spacing:0.04em;}
+.form-input {
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;color:var(--white);font-size:0.92rem;
+  transition:border-color 0.2s;outline:none;
+}
+.form-input:focus{border-color:var(--blue);}
+.form-input::placeholder{color:var(--mist);}
+.btn-login {
+  width:100%;padding:13px;
+  background:var(--blue);color:var(--white);
+  border-radius:8px;font-size:0.95rem;font-weight:700;
+  transition:opacity 0.2s,transform 0.1s;
+  letter-spacing:0.02em;
+}
+.btn-login:hover{opacity:0.88;transform:translateY(-1px);}
+.login-demo-hint{
+  margin-top:20px;padding:12px;
+  background:rgba(255,255,255,0.04);
+  border-radius:8px;font-size:0.78rem;color:var(--mist);
+  text-align:center;line-height:1.6;border:1px solid rgba(255,255,255,0.06);
+}
+.login-demo-hint strong{color:var(--silver);}
+
+/* ═══════════════════════════════════════════
+   APP SHELL (après login)
+═══════════════════════════════════════════ */
+#app { display:none; min-height:100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  position:fixed;top:0;left:0;
+  width:var(--sidebar-w);height:100vh;
+  background:var(--dark);
+  border-right:1px solid rgba(255,255,255,0.06);
+  display:flex;flex-direction:column;
+  z-index:200;transition:transform 0.3s;
+  overflow-y:auto;
+}
+.sidebar-header {
+  padding:20px 20px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;
+}
+.sidebar-logo-icon {
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--blue),#3a6ad4);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+}
+.sidebar-logo-text{font-size:1rem;font-weight:700;color:var(--white);}
+.sidebar-logo-text span{color:var(--blue);}
+.sidebar-role-badge {
+  margin:12px 16px;
+  padding:6px 12px;
+  background:var(--blue-dim);border:1px solid var(--blue-glow);
+  border-radius:6px;font-size:0.72rem;font-weight:700;
+  color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;
+  text-align:center;
+}
+.sidebar-role-badge.admin{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:var(--amber);}
+.sidebar-nav{flex:1;padding:8px 0;}
+.nav-section-label {
+  font-size:0.65rem;font-weight:700;color:var(--mist);
+  letter-spacing:0.15em;text-transform:uppercase;
+  padding:16px 20px 6px;
+}
+.nav-item {
+  display:flex;align-items:center;gap:12px;
+  padding:11px 20px;font-size:0.88rem;color:var(--silver);
+  cursor:pointer;transition:all 0.15s;border-radius:0;
+  position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--white);}
+.nav-item.active{background:var(--blue-dim);color:var(--blue);}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--blue);border-radius:0 2px 2px 0;
+}
+.nav-icon{font-size:1.1rem;width:20px;text-align:center;flex-shrink:0;}
+.nav-badge {
+  margin-left:auto;padding:2px 7px;
+  background:var(--red);border-radius:20px;
+  font-size:0.7rem;font-weight:700;color:var(--white);
+}
+.sidebar-footer {
+  padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06);
+}
+.sidebar-user {
+  display:flex;align-items:center;gap:10px;
+}
+.user-avatar {
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),#3a6ad4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;font-weight:700;color:var(--white);flex-shrink:0;
+}
+.user-info{}
+.user-name{font-size:0.85rem;font-weight:600;color:var(--white);}
+.user-email{font-size:0.72rem;color:var(--mist);}
+.btn-logout{
+  margin-left:auto;padding:6px 10px;
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);
+  border-radius:6px;font-size:0.72rem;color:var(--red);font-weight:600;
+}
+.btn-logout:hover{background:rgba(239,68,68,0.2);}
+
+/* MAIN CONTENT */
+.main {
+  margin-left:var(--sidebar-w);
+  min-height:100vh;
+  background:var(--navy);
+}
+.topbar {
+  height:var(--header-h);
+  background:rgba(10,22,40,0.95);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;
+  padding:0 32px;gap:16px;
+  position:sticky;top:0;z-index:100;
+}
+.topbar-title{font-size:1.1rem;font-weight:700;color:var(--white);flex:1;}
+.topbar-actions{display:flex;align-items:center;gap:12px;}
+.btn-notif {
+  width:36px;height:36px;border-radius:8px;
+  background:rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;font-size:1rem;color:var(--silver);
+  transition:background 0.2s;
+}
+.btn-notif:hover{background:rgba(255,255,255,0.1);}
+.notif-dot {
+  position:absolute;top:6px;right:6px;
+  width:8px;height:8px;border-radius:50%;
+  background:var(--red);border:2px solid var(--navy);
+}
+.page-content { padding:32px; max-width:1200px; }
+
+/* ═══════════════════════════════════════════
+   PAGES (hide/show)
+═══════════════════════════════════════════ */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ═══════════════════════════════════════════
+   COMPONENTS
+═══════════════════════════════════════════ */
+/* Cards */
+.card {
+  background:var(--navy-mid);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:12px;padding:24px;
+  transition:border-color 0.2s;
+}
+.card:hover{border-color:rgba(255,255,255,0.12);}
+.card-title{font-size:0.75rem;font-weight:700;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;}
+.card-value{font-size:2rem;font-weight:800;color:var(--white);line-height:1;}
+.card-sub{font-size:0.82rem;color:var(--silver);margin-top:6px;}
+
+/* Stat grid */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+
+/* Greeting */
+.greeting-banner {
+  background:linear-gradient(135deg, #0D2040 0%, #132847 60%, #1a3558 100%);
+  border:1px solid rgba(91,141,238,0.2);
+  border-radius:16px;padding:28px 32px;margin-bottom:28px;
+  position:relative;overflow:hidden;
+}
+.greeting-banner::after {
+  content:'';position:absolute;right:-30px;top:-30px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle, rgba(91,141,238,0.12) 0%, transparent 70%);
+}
+.greeting-eyebrow{font-size:0.75rem;color:var(--blue);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;}
+.greeting-title{font-size:1.6rem;font-weight:800;color:var(--white);margin-bottom:6px;}
+.greeting-sub{font-size:0.9rem;color:var(--silver);}
+.greeting-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
+
+/* Buttons */
+.btn-primary {
+  padding:10px 20px;background:var(--blue);color:var(--white);
+  border-radius:8px;font-size:0.85rem;font-weight:700;
+  transition:opacity 0.2s;display:inline-flex;align-items:center;gap:7px;
+}
+.btn-primary:hover{opacity:0.85;}
+.btn-secondary {
+  padding:10px 20px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  color:var(--white);border-radius:8px;font-size:0.85rem;font-weight:600;
+  transition:background 0.2s;display:inline-flex;align-items:center;gap:7px;
+}
+.btn-secondary:hover{background:rgba(255,255,255,0.12);}
+.btn-success{background:var(--green);color:var(--white);}
+.btn-danger{background:var(--red);color:var(--white);}
+.btn-sm{padding:7px 14px;font-size:0.78rem;}
+
+/* Status badges */
+.badge {
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:20px;
+  font-size:0.75rem;font-weight:700;letter-spacing:0.03em;
+}
+.badge-blue{background:var(--blue-dim);color:var(--blue);}
+.badge-green{background:var(--green-dim);color:var(--green);}
+.badge-amber{background:var(--amber-dim);color:var(--amber);}
+.badge-red{background:var(--red-dim);color:var(--red);}
+.badge-gray{background:rgba(255,255,255,0.07);color:var(--silver);}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+/* Section headers */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-title{font-size:1rem;font-weight:700;color:var(--white);}
+.section-sub{font-size:0.82rem;color:var(--mist);margin-top:2px;}
+
+/* ═══════════════════════════════════════════
+   PROGRESS TRACKER
+═══════════════════════════════════════════ */
+.progress-tracker { margin:24px 0; }
+.progress-bar-outer {
+  height:4px;background:rgba(255,255,255,0.08);
+  border-radius:2px;margin-bottom:28px;overflow:hidden;
+}
+.progress-bar-inner {
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg, var(--blue), var(--green));
+  transition:width 0.6s ease;
+}
+.stages-row {
+  display:grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap:4px;
+  position:relative;
+}
+.stage-item {
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;position:relative;
+}
+.stage-dot {
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;font-weight:700;
+  transition:all 0.3s;flex-shrink:0;margin-bottom:8px;
+  position:relative;z-index:2;
+  border:2px solid transparent;
+}
+.stage-dot.done {
+  background:var(--green);color:var(--white);
+  border-color:var(--green);
+  box-shadow:0 0 12px rgba(16,185,129,0.4);
+}
+.stage-dot.active {
+  background:var(--blue);color:var(--white);
+  border-color:var(--blue);
+  box-shadow:0 0 16px rgba(91,141,238,0.5);
+  animation:pulse-dot 2s infinite;
+}
+.stage-dot.pending {
+  background:rgba(255,255,255,0.06);
+  color:var(--mist);border-color:rgba(255,255,255,0.1);
+}
+@keyframes pulse-dot {
+  0%,100%{box-shadow:0 0 12px rgba(91,141,238,0.4);}
+  50%{box-shadow:0 0 24px rgba(91,141,238,0.7);}
+}
+.stage-connector {
+  position:absolute;top:15px;left:50%;right:-50%;
+  height:2px;background:rgba(255,255,255,0.08);
+  z-index:1;
+}
+.stage-connector.done{background:var(--green);}
+.stage-connector.active{background:linear-gradient(90deg,var(--green),rgba(91,141,238,0.4));}
+.stage-label {
+  font-size:0.68rem;color:var(--mist);line-height:1.3;
+  font-weight:500;
+}
+.stage-item.done .stage-label{color:var(--green);}
+.stage-item.active .stage-label{color:var(--blue);font-weight:700;}
+
+/* ═══════════════════════════════════════════
+   PROJECT CARD
+═══════════════════════════════════════════ */
+.project-card {
+  background:var(--navy-mid);border:1px solid rgba(255,255,255,0.07);
+  border-radius:12px;padding:20px 24px;
+  display:grid;grid-template-columns:1fr auto;
+  gap:16px;align-items:center;
+  cursor:pointer;transition:all 0.2s;
+  margin-bottom:12px;
+}
+.project-card:hover{border-color:var(--blue);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+.project-ref{font-size:0.72rem;color:var(--blue);font-weight:700;letter-spacing:0.08em;margin-bottom:4px;}
+.project-name{font-size:1rem;font-weight:700;color:var(--white);margin-bottom:6px;}
+.project-meta{display:flex;gap:16px;flex-wrap:wrap;}
+.project-meta-item{font-size:0.8rem;color:var(--silver);display:flex;align-items:center;gap:5px;}
+.project-progress-mini{
+  width:120px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;
+}
+.mini-bar{width:100%;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;}
+.mini-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--green));}
+.mini-pct{font-size:0.72rem;color:var(--silver);}
+
+/* ═══════════════════════════════════════════
+   ACTIVITY FEED
+═══════════════════════════════════════════ */
+.activity-feed{display:flex;flex-direction:column;gap:0;}
+.activity-item {
+  display:flex;gap:14px;padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  position:relative;
+}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot-col{display:flex;flex-direction:column;align-items:center;gap:0;}
+.activity-dot {
+  width:10px;height:10px;border-radius:50%;
+  background:var(--blue);flex-shrink:0;margin-top:4px;
+}
+.activity-line{width:2px;flex:1;background:rgba(255,255,255,0.06);margin-top:4px;}
+.activity-item:last-child .activity-line{display:none;}
+.activity-content{}
+.activity-text{font-size:0.88rem;color:var(--white);margin-bottom:3px;line-height:1.4;}
+.activity-time{font-size:0.75rem;color:var(--mist);}
+.activity-tag{display:inline-block;font-size:0.7rem;padding:2px 8px;border-radius:4px;margin-left:8px;}
+
+/* ═══════════════════════════════════════════
+   DOCUMENTS
+═══════════════════════════════════════════ */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.doc-card {
+  background:var(--navy-light);border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;padding:16px;
+  cursor:pointer;transition:all 0.2s;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
+}
+.doc-card:hover{border-color:var(--blue);background:var(--steel);}
+.doc-icon{font-size:2rem;}
+.doc-name{font-size:0.82rem;color:var(--white);font-weight:600;line-height:1.3;}
+.doc-meta{font-size:0.72rem;color:var(--mist);}
+.doc-dl-btn{
+  padding:6px 14px;background:var(--blue-dim);color:var(--blue);
+  border-radius:6px;font-size:0.75rem;font-weight:600;width:100%;
+  transition:background 0.2s;
+}
+.doc-dl-btn:hover{background:var(--blue);color:var(--white);}
+
+/* ═══════════════════════════════════════════
+   NOTIFICATIONS
+═══════════════════════════════════════════ */
+.notif-list{display:flex;flex-direction:column;gap:10px;}
+.notif-item {
+  display:flex;gap:14px;padding:14px 16px;
+  background:var(--navy-mid);border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;align-items:flex-start;
+  transition:background 0.2s;
+}
+.notif-item.unread{border-left:3px solid var(--blue);background:rgba(91,141,238,0.05);}
+.notif-item-icon{font-size:1.3rem;flex-shrink:0;margin-top:2px;}
+.notif-item-text{font-size:0.87rem;color:var(--white);line-height:1.4;margin-bottom:4px;}
+.notif-item-time{font-size:0.74rem;color:var(--mist);}
+.notif-dot-unread{
+  width:8px;height:8px;border-radius:50%;background:var(--blue);
+  flex-shrink:0;margin-top:6px;margin-left:auto;
+}
+
+/* ═══════════════════════════════════════════
+   PROJECT DETAIL VIEW
+═══════════════════════════════════════════ */
+.project-detail-grid{
+  display:grid;grid-template-columns:2fr 1fr;gap:20px;
+}
+.project-info-table{width:100%;}
+.project-info-row{
+  display:grid;grid-template-columns:140px 1fr;
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+  font-size:0.87rem;
+}
+.project-info-row:last-child{border-bottom:none;}
+.project-info-label{color:var(--mist);font-weight:500;}
+.project-info-value{color:var(--white);font-weight:600;}
+.btn-back{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:0.82rem;color:var(--silver);margin-bottom:20px;
+  padding:7px 12px;border-radius:6px;background:rgba(255,255,255,0.05);
+  transition:background 0.2s;
+}
+.btn-back:hover{background:rgba(255,255,255,0.1);}
+
+/* ═══════════════════════════════════════════
+   ADMIN SPECIFIC
+═══════════════════════════════════════════ */
+.admin-table{width:100%;border-collapse:collapse;font-size:0.87rem;}
+.admin-table th{
+  padding:10px 16px;text-align:left;
+  font-size:0.72rem;color:var(--mist);font-weight:700;
+  letter-spacing:0.08em;text-transform:uppercase;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.admin-table td{
+  padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);
+  color:var(--silver);vertical-align:middle;
+}
+.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
+.admin-table .td-main{color:var(--white);font-weight:600;}
+
+/* Admin form */
+.admin-form{display:flex;flex-direction:column;gap:16px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group-admin{}
+.form-label-admin{display:block;font-size:0.78rem;color:var(--silver);margin-bottom:7px;font-weight:600;letter-spacing:0.04em;}
+.form-control{
+  width:100%;padding:10px 14px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;color:var(--white);font-size:0.88rem;
+  outline:none;transition:border-color 0.2s;
+}
+.form-control:focus{border-color:var(--blue);}
+.form-control option{background:var(--navy-mid);}
+textarea.form-control{resize:vertical;min-height:80px;}
+.admin-actions-bar{
+  display:flex;justify-content:flex-end;gap:10px;
+  padding-top:16px;border-top:1px solid rgba(255,255,255,0.07);
+}
+
+/* Status selector admin */
+.status-select-row{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.status-option{
+  padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;
+  cursor:pointer;border:2px solid transparent;transition:all 0.2s;
+}
+.status-option.selected{border-color:var(--blue);}
+
+/* Modal */
+.modal-overlay {
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:500;display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box {
+  background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;width:100%;max-width:600px;max-height:90vh;
+  overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.6);
+}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.modal-title{font-size:1.05rem;font-weight:700;color:var(--white);}
+.modal-close{
+  width:32px;height:32px;border-radius:6px;
+  background:rgba(255,255,255,0.07);color:var(--silver);
+  font-size:1.1rem;display:flex;align-items:center;justify-content:center;
+  transition:background 0.2s;
+}
+.modal-close:hover{background:rgba(255,255,255,0.15);}
+.modal-body{padding:24px;}
+
+/* Toast */
+.toast {
+  position:fixed;bottom:24px;right:24px;z-index:1000;
+  background:var(--green);color:var(--white);
+  padding:12px 20px;border-radius:10px;font-size:0.88rem;font-weight:600;
+  transform:translateY(100px);opacity:0;
+  transition:all 0.3s;pointer-events:none;
+  box-shadow:0 8px 24px rgba(16,185,129,0.4);
+}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* Tabs */
+.tab-group{display:flex;gap:2px;background:rgba(255,255,255,0.04);border-radius:8px;padding:3px;margin-bottom:20px;}
+.tab{
+  padding:8px 16px;border-radius:6px;font-size:0.82rem;font-weight:600;
+  color:var(--silver);cursor:pointer;transition:all 0.2s;
+}
+.tab.active{background:var(--blue);color:var(--white);}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:900px){
+  :root{--sidebar-w:0px;}
+  .sidebar{transform:translateX(-260px);width:260px;}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .page-content{padding:16px;}
+  .project-detail-grid{grid-template-columns:1fr;}
+  .stages-row{grid-template-columns:repeat(3,1fr);gap:16px;}
+  .stage-connector{display:none;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN PAGE
+══════════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-globe">🌐</div>
+      <div class="login-logo-text">TLS <span>Global Trade</span></div>
+    </div>
+    <div class="login-role-tabs">
+      <div class="role-tab active" onclick="setRole('client',this)">👤 Espace Client</div>
+      <div class="role-tab" onclick="setRole('admin',this)">⚙️ Administration</div>
+    </div>
+    <div class="login-title">Bienvenue</div>
+    <div class="login-sub" id="login-sub">Accédez à votre espace client sécurisé</div>
+    <div class="form-group">
+      <label class="form-label">Adresse email</label>
+      <input class="form-input" type="email" id="login-email" placeholder="votre@email.com" value="client@example.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mot de passe</label>
+      <input class="form-input" type="password" id="login-password" placeholder="••••••••" value="demo1234">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Se connecter →</button>
+    <div style="text-align:center;margin-top:16px;">
+      <button onclick="openRegisterModal()" style="font-size:0.82rem;color:var(--blue);background:none;border:none;cursor:pointer;text-decoration:underline;">
+        Pas encore client ? Créer un compte →
+      </button>
+    </div>
+    <div class="login-demo-hint">
+      <strong>Démo client :</strong> client@example.com / demo1234<br>
+      <strong>Démo admin :</strong> admin@tlsglobaltrade.com / admin2024
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo-icon">🌐</div>
+      <div class="sidebar-logo-text">TLS <span>Global Trade</span></div>
+    </div>
+    <div class="sidebar-role-badge" id="role-badge">ESPACE CLIENT</div>
+
+    <!-- CLIENT NAV -->
+    <nav class="sidebar-nav" id="client-nav">
+      <div class="nav-section-label">Mon espace</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)">
+        <span class="nav-icon">🏠</span> Tableau de bord
+      </div>
+      <div class="nav-item" onclick="showPage('projects',this)">
+        <span class="nav-icon">📦</span> Mes projets
+        <span class="nav-badge" id="projects-count">2</span>
+      </div>
+      <div class="nav-item" onclick="showPage('documents',this)">
+        <span class="nav-icon">📄</span> Documents
+      </div>
+      <div class="nav-item" onclick="showPage('notifications',this)">
+        <span class="nav-icon">🔔</span> Notifications
+        <span class="nav-badge" id="notif-count">3</span>
+      </div>
+      <div class="nav-section-label">Compte</div>
+      <div class="nav-item" onclick="showPage('profile',this)">
+        <span class="nav-icon">👤</span> Mon profil
+      </div>
+      <div class="nav-item" onclick="goBackToSite()">
+        <span class="nav-icon">🌍</span> ← Retour au site
+      </div>
+    </nav>
+
+    <!-- ADMIN NAV -->
+    <nav class="sidebar-nav" id="admin-nav" style="display:none;">
+      <div class="nav-section-label">Back-office</div>
+      <div class="nav-item active" onclick="showPage('admin-dashboard',this)">
+        <span class="nav-icon">📊</span> Vue d'ensemble
+      </div>
+      <div class="nav-item" onclick="showPage('admin-projects',this)">
+        <span class="nav-icon">📦</span> Projets clients
+      </div>
+      <div class="nav-item" onclick="showPage('admin-clients',this)">
+        <span class="nav-icon">👥</span> Clients
+      </div>
+      <div class="nav-item" onclick="showPage('admin-documents',this)">
+        <span class="nav-icon">📎</span> Documents
+      </div>
+      <div class="nav-section-label">Système</div>
+      <div class="nav-item" onclick="showPage('admin-notifications',this)">
+        <span class="nav-icon">📣</span> Notifications
+      </div>
+      <div class="nav-item" onclick="goBackToSite()">
+        <span class="nav-icon">🌍</span> ← Retour au site
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-avatar">KA</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Kofi Asante</div>
+          <div class="user-email" id="user-email">client@example.com</div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">↩</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button style="display:none;background:rgba(255,255,255,0.07);border-radius:6px;padding:8px;color:var(--silver);" id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div class="topbar-title" id="topbar-title">Tableau de bord</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-notif" onclick="showPage('notifications',null)" title="Notifications">
+          🔔 <span class="notif-dot" id="notif-indicator"></span>
+        </button>
+        <button class="btn-notif" onclick="showPage('profile',null)" title="Profil">👤</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- ════ CLIENT: DASHBOARD ════ -->
+      <div class="page active" id="page-dashboard">
+        <div class="greeting-banner">
+          <div class="greeting-eyebrow">✦ Espace Client Premium</div>
+          <div class="greeting-title" id="greeting-name">Bonjour, Kofi 👋</div>
+          <div class="greeting-sub">Vos projets avancent. Voici un résumé de votre activité en cours.</div>
+          <div class="greeting-actions">
+            <button class="btn-primary" onclick="showPage('projects',null)">📦 Voir mes projets</button>
+            <button class="btn-secondary" onclick="showPage('documents',null)">📄 Mes documents</button>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="card">
+            <div class="card-title">Projets actifs</div>
+            <div class="card-value">2</div>
+            <div class="card-sub">En cours de traitement</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Étape actuelle</div>
+            <div class="card-value" style="font-size:1.1rem;">🚢 En transit</div>
+            <div class="card-sub">Projet TLS-0047 · Shenzhen → Abidjan</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Documents</div>
+            <div class="card-value">6</div>
+            <div class="card-sub">3 en attente de signature</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Dernière mise à jour</div>
+            <div class="card-value" style="font-size:1rem;">Il y a 2h</div>
+            <div class="card-sub">Expédition confirmée par TLS</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:20px;">
+          <div>
+            <div class="section-header">
+              <div>
+                <div class="section-title">Projets en cours</div>
+                <div class="section-sub">Cliquez sur un projet pour voir le détail</div>
+              </div>
+              <button class="btn-secondary btn-sm" onclick="showPage('projects',null)">Tous →</button>
+            </div>
+
+            <div class="project-card" onclick="openProjectDetail('TLS-0047')">
+              <div>
+                <div class="project-ref">📦 #TLS-0047</div>
+                <div class="project-name">Électronique & Smartphones — Abidjan</div>
+                <div class="project-meta">
+                  <span class="project-meta-item">🇨🇳 Shenzhen</span>
+                  <span class="project-meta-item">→</span>
+                  <span class="project-meta-item">🇨🇮 Abidjan</span>
+                  <span class="badge badge-blue" style="margin-left:8px;">En transit</span>
+                </div>
+              </div>
+              <div class="project-progress-mini">
+                <div class="mini-bar"><div class="mini-bar-fill" style="width:78%"></div></div>
+                <div class="mini-pct">78% — Étape 7/9</div>
+                <button class="btn-primary btn-sm" style="margin-top:6px;">Voir →</button>
+              </div>
+            </div>
+
+            <div class="project-card" onclick="openProjectDetail('TLS-0051')">
+              <div>
+                <div class="project-ref">📦 #TLS-0051</div>
+                <div class="project-name">Textile & Vêtements — Lomé</div>
+                <div class="project-meta">
+                  <span class="project-meta-item">🇨🇳 Guangzhou</span>
+                  <span class="project-meta-item">→</span>
+                  <span class="project-meta-item">🇹🇬 Lomé</span>
+                  <span class="badge badge-amber" style="margin-left:8px;">En production</span>
+                </div>
+              </div>
+              <div class="project-progress-mini">
+                <div class="mini-bar"><div class="mini-bar-fill" style="width:44%"></div></div>
+                <div class="mini-pct">44% — Étape 4/9</div>
+                <button class="btn-primary btn-sm" style="margin-top:6px;">Voir →</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-header">
+              <div class="section-title">Activité récente</div>
+            </div>
+            <div class="card" style="padding:16px;">
+              <div class="activity-feed">
+                <div class="activity-item">
+                  <div class="activity-dot-col">
+                    <div class="activity-dot" style="background:var(--blue)"></div>
+                    <div class="activity-line"></div>
+                  </div>
+                  <div class="activity-content">
+                    <div class="activity-text">📦 Votre expédition a quitté Shenzhen <strong>#TLS-0047</strong></div>
+                    <div class="activity-time">Aujourd'hui, 14:23</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot-col">
+                    <div class="activity-dot" style="background:var(--green)"></div>
+                    <div class="activity-line"></div>
+                  </div>
+                  <div class="activity-content">
+                    <div class="activity-text">✅ Contrôle qualité validé <strong>#TLS-0047</strong></div>
+                    <div class="activity-time">Hier, 10:05</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot-col">
+                    <div class="activity-dot" style="background:var(--amber)"></div>
+                    <div class="activity-line"></div>
+                  </div>
+                  <div class="activity-content">
+                    <div class="activity-text">📄 Devis confirmé pour <strong>#TLS-0051</strong></div>
+                    <div class="activity-time">Il y a 2 jours</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot-col">
+                    <div class="activity-dot" style="background:var(--green)"></div>
+                  </div>
+                  <div class="activity-content">
+                    <div class="activity-text">🔍 Fournisseur validé <strong>#TLS-0051</strong> — Guangzhou Premium Textiles</div>
+                    <div class="activity-time">Il y a 3 jours</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ CLIENT: PROJECTS ════ -->
+      <div class="page" id="page-projects">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div>
+            <div class="section-title" style="font-size:1.3rem;">Mes Projets</div>
+            <div class="section-sub">Suivez l'avancement de chaque projet en temps réel</div>
+          </div>
+        </div>
+        <div class="project-card" onclick="openProjectDetail('TLS-0047')">
+          <div>
+            <div class="project-ref">📦 #TLS-0047</div>
+            <div class="project-name">Électronique & Smartphones</div>
+            <div class="project-meta">
+              <span class="project-meta-item">🇨🇳 Shenzhen → 🇨🇮 Abidjan</span>
+              <span class="project-meta-item">· Qtté: 500 unités</span>
+              <span class="badge badge-blue" style="margin-left:8px;">🚢 En transit</span>
+            </div>
+          </div>
+          <div class="project-progress-mini">
+            <div class="mini-bar"><div class="mini-bar-fill" style="width:78%"></div></div>
+            <div class="mini-pct">Étape 7/9 · 78%</div>
+            <button class="btn-primary btn-sm" style="margin-top:6px;">Voir le projet →</button>
+          </div>
+        </div>
+        <div class="project-card" onclick="openProjectDetail('TLS-0051')">
+          <div>
+            <div class="project-ref">📦 #TLS-0051</div>
+            <div class="project-name">Textile & Vêtements</div>
+            <div class="project-meta">
+              <span class="project-meta-item">🇨🇳 Guangzhou → 🇹🇬 Lomé</span>
+              <span class="project-meta-item">· Qtté: 1 200 pièces</span>
+              <span class="badge badge-amber" style="margin-left:8px;">⚙️ En production</span>
+            </div>
+          </div>
+          <div class="project-progress-mini">
+            <div class="mini-bar"><div class="mini-bar-fill" style="width:44%"></div></div>
+            <div class="mini-pct">Étape 4/9 · 44%</div>
+            <button class="btn-primary btn-sm" style="margin-top:6px;">Voir le projet →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ CLIENT: PROJECT DETAIL ════ -->
+      <div class="page" id="page-project-detail">
+        <button class="btn-back" onclick="showPage('projects',null)">← Retour aux projets</button>
+
+        <div style="margin-bottom:24px;">
+          <div style="font-size:0.8rem;color:var(--blue);font-weight:700;letter-spacing:0.08em;margin-bottom:6px;" id="detail-ref"></div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--white);margin-bottom:8px;" id="detail-name"></div>
+          <div id="detail-badge"></div>
+        </div>
+
+        <!-- PROGRESS TRACKER -->
+        <div class="card" style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="font-size:0.9rem;font-weight:700;color:var(--white);">Progression du projet</div>
+            <div id="detail-progress-pct" style="font-size:0.85rem;color:var(--blue);font-weight:700;"></div>
+          </div>
+          <div class="progress-bar-outer">
+            <div class="progress-bar-inner" id="detail-progress-bar"></div>
+          </div>
+          <div class="stages-row" id="stages-row"></div>
+        </div>
+
+        <div class="project-detail-grid">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <!-- Project Info -->
+            <div class="card">
+              <div class="section-title" style="margin-bottom:14px;">📋 Détails du projet</div>
+              <table class="project-info-table" id="detail-info-table"></table>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="card">
+              <div class="section-title" style="margin-bottom:14px;">📡 Mises à jour du projet</div>
+              <div class="activity-feed" id="detail-activity"></div>
+            </div>
+          </div>
+
+          <!-- Documents -->
+          <div class="card" style="height:fit-content;">
+            <div class="section-title" style="margin-bottom:14px;">📄 Documents</div>
+            <div id="detail-docs"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ CLIENT: DOCUMENTS ════ -->
+      <div class="page" id="page-documents">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div>
+            <div class="section-title" style="font-size:1.3rem;">Mes Documents</div>
+            <div class="section-sub">Tous vos fichiers, organisés par projet</div>
+          </div>
+        </div>
+        <div class="tab-group">
+          <div class="tab active">Tous</div>
+          <div class="tab">Devis</div>
+          <div class="tab">Factures</div>
+          <div class="tab">Expédition</div>
+          <div class="tab">Douanes</div>
+        </div>
+        <div class="doc-grid">
+          <div class="doc-card" onclick="fakeDownload('Devis_TLS-0047.pdf')">
+            <div class="doc-icon">📋</div>
+            <div class="doc-name">Devis Commercial</div>
+            <div class="doc-meta">#TLS-0047 · 2.3 MB · PDF</div>
+            <button class="doc-dl-btn">⬇ Télécharger</button>
+          </div>
+          <div class="doc-card" onclick="fakeDownload('Facture_TLS-0047.pdf')">
+            <div class="doc-icon">🧾</div>
+            <div class="doc-name">Facture Proforma</div>
+            <div class="doc-meta">#TLS-0047 · 1.1 MB · PDF</div>
+            <button class="doc-dl-btn">⬇ Télécharger</button>
+          </div>
+          <div class="doc-card" onclick="fakeDownload('BL_TLS-0047.pdf')">
+            <div class="doc-icon">🚢</div>
+            <div class="doc-name">Bill of Lading</div>
+            <div class="doc-meta">#TLS-0047 · 800 KB · PDF</div>
+            <button class="doc-dl-btn">⬇ Télécharger</button>
+          </div>
+          <div class="doc-card" onclick="fakeDownload('QC_Report_TLS-0047.pdf')">
+            <div class="doc-icon">✅</div>
+            <div class="doc-name">Rapport Contrôle Qualité</div>
+            <div class="doc-meta">#TLS-0047 · 4.7 MB · PDF</div>
+            <button class="doc-dl-btn">⬇ Télécharger</button>
+          </div>
+          <div class="doc-card" onclick="fakeDownload('Devis_TLS-0051.pdf')">
+            <div class="doc-icon">📋</div>
+            <div class="doc-name">Devis Commercial</div>
+            <div class="doc-meta">#TLS-0051 · 1.8 MB · PDF</div>
+            <button class="doc-dl-btn">⬇ Télécharger</button>
+          </div>
+          <div class="doc-card" onclick="fakeDownload('Fournisseur_TLS-0051.pdf')">
+            <div class="doc-icon">🏭</div>
+            <div class="doc-name">Fiche Fournisseur Validé</div>
+            <div class="doc-meta">#TLS-0051 · 650 KB · PDF</div>
+            <button class="doc-dl-btn">⬇ Télécharger</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ CLIENT: NOTIFICATIONS ════ -->
+      <div class="page" id="page-notifications">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div>
+            <div class="section-title" style="font-size:1.3rem;">Notifications</div>
+            <div class="section-sub">3 non lues</div>
+          </div>
+          <button class="btn-secondary btn-sm">Tout marquer comme lu</button>
+        </div>
+        <div class="notif-list">
+          <div class="notif-item unread">
+            <div class="notif-item-icon">🚢</div>
+            <div>
+              <div class="notif-item-text"><strong>#TLS-0047</strong> — Votre expédition est en cours. ETA Abidjan : 14 jours.</div>
+              <div class="notif-item-time">Aujourd'hui, 14:23</div>
+            </div>
+            <div class="notif-dot-unread"></div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-item-icon">✅</div>
+            <div>
+              <div class="notif-item-text"><strong>#TLS-0047</strong> — Contrôle qualité réussi. Rapport disponible dans Documents.</div>
+              <div class="notif-item-time">Hier, 10:05</div>
+            </div>
+            <div class="notif-dot-unread"></div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-item-icon">📄</div>
+            <div>
+              <div class="notif-item-text"><strong>#TLS-0051</strong> — Devis confirmé. Votre commande est en cours de production.</div>
+              <div class="notif-item-time">Il y a 2 jours</div>
+            </div>
+            <div class="notif-dot-unread"></div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-item-icon">🔍</div>
+            <div>
+              <div class="notif-item-text"><strong>#TLS-0051</strong> — Fournisseur validé : Guangzhou Premium Textiles Co. Ltd.</div>
+              <div class="notif-item-time">Il y a 3 jours</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-item-icon">🎉</div>
+            <div>
+              <div class="notif-item-text">Bienvenue sur l'espace client TLS Global Trade ! Votre compte est actif.</div>
+              <div class="notif-item-time">Il y a 7 jours</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ CLIENT: PROFILE ════ -->
+      <div class="page" id="page-profile">
+        <div class="section-title" style="font-size:1.3rem;margin-bottom:20px;">Mon Profil</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="card">
+            <div class="section-title" style="margin-bottom:16px;">Informations personnelles</div>
+            <div class="admin-form">
+              <div class="form-group-admin">
+                <label class="form-label-admin">Nom complet</label>
+                <input class="form-control" value="Kofi Asante">
+              </div>
+              <div class="form-group-admin">
+                <label class="form-label-admin">Email</label>
+                <input class="form-control" value="client@example.com">
+              </div>
+              <div class="form-group-admin">
+                <label class="form-label-admin">Téléphone</label>
+                <input class="form-control" value="+225 07 12 34 56">
+              </div>
+              <div class="form-group-admin">
+                <label class="form-label-admin">Pays</label>
+                <input class="form-control" value="Côte d'Ivoire">
+              </div>
+              <div class="admin-actions-bar">
+                <button class="btn-primary" onclick="showToast('✅ Profil mis à jour')">Enregistrer</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title" style="margin-bottom:16px;">Sécurité</div>
+            <div class="admin-form">
+              <div class="form-group-admin">
+                <label class="form-label-admin">Mot de passe actuel</label>
+                <input class="form-control" type="password" placeholder="••••••••">
+              </div>
+              <div class="form-group-admin">
+                <label class="form-label-admin">Nouveau mot de passe</label>
+                <input class="form-control" type="password" placeholder="••••••••">
+              </div>
+              <div class="form-group-admin">
+                <label class="form-label-admin">Confirmer le mot de passe</label>
+                <input class="form-control" type="password" placeholder="••••••••">
+              </div>
+              <div class="admin-actions-bar">
+                <button class="btn-primary" onclick="showToast('✅ Mot de passe mis à jour')">Modifier</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ ADMIN: DASHBOARD ════ -->
+      <div class="page" id="page-admin-dashboard">
+        <div class="greeting-banner" style="background:linear-gradient(135deg,#1a1000,#2d1f00,#1a1000);border-color:rgba(245,158,11,0.2);">
+          <div class="greeting-eyebrow" style="color:var(--amber);">⚙ Administration TLS Global Trade</div>
+          <div class="greeting-title">Back-office Administrateur</div>
+          <div class="greeting-sub">Gérez les projets clients, les statuts et les documents depuis cet espace.</div>
+          <div class="greeting-actions">
+            <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="openModal('modal-new-project')">+ Nouveau projet</button>
+            <button class="btn-secondary" onclick="showPage('admin-projects',null)">📦 Voir tous les projets</button>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="card">
+            <div class="card-title">Projets actifs</div>
+            <div class="card-value">4</div>
+            <div class="card-sub">2 clients différents</div>
+          </div>
+          <div class="card">
+            <div class="card-title">En transit</div>
+            <div class="card-value">1</div>
+            <div class="card-sub">ETA Abidjan : 14 jours</div>
+          </div>
+          <div class="card">
+            <div class="card-title">En production</div>
+            <div class="card-value">2</div>
+            <div class="card-sub">Guangzhou & Shenzhen</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Revenus ce mois</div>
+            <div class="card-value">€ —</div>
+            <div class="card-sub">Confidentiel</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">Projets récents</div>
+          <button class="btn-secondary btn-sm" onclick="showPage('admin-projects',null)">Tous les projets →</button>
+        </div>
+
+        <div class="card">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Client</th>
+                <th>Produit</th>
+                <th>Statut</th>
+                <th>Progression</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-main">#TLS-0047</td>
+                <td>Kofi Asante</td>
+                <td>Électronique · Abidjan</td>
+                <td><span class="badge badge-blue">En transit</span></td>
+                <td>
+                  <div class="mini-bar" style="width:100px;display:inline-block;"><div class="mini-bar-fill" style="width:78%"></div></div>
+                  <span style="font-size:0.75rem;color:var(--silver);margin-left:6px;">78%</span>
+                </td>
+                <td>
+                  <button class="btn-primary btn-sm" onclick="openAdminProjectEdit('TLS-0047')">Gérer</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="td-main">#TLS-0051</td>
+                <td>Kofi Asante</td>
+                <td>Textile · Lomé</td>
+                <td><span class="badge badge-amber">En production</span></td>
+                <td>
+                  <div class="mini-bar" style="width:100px;display:inline-block;"><div class="mini-bar-fill" style="width:44%"></div></div>
+                  <span style="font-size:0.75rem;color:var(--silver);margin-left:6px;">44%</span>
+                </td>
+                <td>
+                  <button class="btn-primary btn-sm" onclick="openAdminProjectEdit('TLS-0051')">Gérer</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════ ADMIN: PROJECTS ════ -->
+      <div class="page" id="page-admin-projects">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div>
+            <div class="section-title" style="font-size:1.3rem;">Gestion des Projets</div>
+            <div class="section-sub">Modifier les statuts, ajouter des mises à jour et documents</div>
+          </div>
+          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="openModal('modal-new-project')">+ Nouveau projet</button>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;" id="admin-project-list">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Client</th>
+                <th>Produit</th>
+                <th>Origine → Destination</th>
+                <th>Statut</th>
+                <th>Progression</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-projects-tbody">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ADMIN PROJECT EDIT PANEL -->
+        <div id="admin-project-edit" style="display:none;">
+          <button class="btn-back" onclick="document.getElementById('admin-project-edit').style.display='none';document.getElementById('admin-project-list').style.display='block';">← Retour à la liste</button>
+
+          <div class="section-title" style="font-size:1.2rem;margin-bottom:20px;" id="admin-edit-title">Modifier le projet #TLS-0047</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <!-- Statut -->
+            <div class="card">
+              <div class="section-title" style="margin-bottom:16px;">📊 Changer le statut</div>
+              <div style="font-size:0.82rem;color:var(--silver);margin-bottom:14px;">Le client verra immédiatement le nouveau statut dans son espace.</div>
+              <div style="display:flex;flex-direction:column;gap:8px;" id="status-buttons"></div>
+              <div class="admin-actions-bar">
+                <button class="btn-primary" onclick="saveProjectStatus()">💾 Enregistrer le statut</button>
+              </div>
+            </div>
+
+            <!-- Add Update -->
+            <div class="card">
+              <div class="section-title" style="margin-bottom:16px;">📣 Ajouter une mise à jour</div>
+              <div class="admin-form">
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Message pour le client</label>
+                  <textarea class="form-control" id="admin-update-text" rows="3" placeholder="Ex: Votre expédition a quitté Shenzhen..."></textarea>
+                </div>
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Type</label>
+                  <select class="form-control" id="admin-update-type">
+                    <option>📦 Mise à jour logistique</option>
+                    <option>✅ Validation</option>
+                    <option>📄 Document</option>
+                    <option>🔔 Information importante</option>
+                  </select>
+                </div>
+                <div class="admin-actions-bar">
+                  <button class="btn-primary" onclick="addProjectUpdate()">📤 Publier la mise à jour</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload Doc -->
+            <div class="card">
+              <div class="section-title" style="margin-bottom:16px;">📎 Ajouter un document</div>
+              <div class="admin-form">
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Nom du document</label>
+                  <input class="form-control" id="admin-doc-name" placeholder="Ex: Facture Proforma">
+                </div>
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Type</label>
+                  <select class="form-control" id="admin-doc-type">
+                    <option>📋 Devis</option>
+                    <option>🧾 Facture</option>
+                    <option>🚢 Transport</option>
+                    <option>✅ Contrôle Qualité</option>
+                    <option>🛃 Douanes</option>
+                    <option>🏭 Fournisseur</option>
+                  </select>
+                </div>
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Fichier (simulation)</label>
+                  <input class="form-control" type="file" accept=".pdf,.doc,.xlsx">
+                </div>
+                <div class="admin-actions-bar">
+                  <button class="btn-primary" onclick="addProjectDoc()">📤 Ajouter le document</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes internes -->
+            <div class="card">
+              <div class="section-title" style="margin-bottom:16px;">🗒️ Note interne (non visible client)</div>
+              <div class="admin-form">
+                <div class="form-group-admin">
+                  <label class="form-label-admin">Note</label>
+                  <textarea class="form-control" rows="4" placeholder="Note réservée à l'équipe TLS..."></textarea>
+                </div>
+                <div class="admin-actions-bar">
+                  <button class="btn-secondary" onclick="showToast('✅ Note enregistrée')">💾 Enregistrer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ ADMIN: CLIENTS ════ -->
+      <div class="page" id="page-admin-clients">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div class="section-title" style="font-size:1.3rem;">Gestion des Clients</div>
+          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="openModal('modal-new-client')">+ Nouveau client</button>
+        </div>
+        <div class="card">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Client</th><th>Email</th><th>Pays</th><th>Projets</th><th>Statut</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-main">Kofi Asante</td>
+                <td>client@example.com</td>
+                <td>🇨🇮 Côte d'Ivoire</td>
+                <td>2 actifs</td>
+                <td><span class="badge badge-green">Actif</span></td>
+                <td><button class="btn-secondary btn-sm">Voir</button></td>
+              </tr>
+              <tr>
+                <td class="td-main">Mawuli Agbeko</td>
+                <td>m.agbeko@email.com</td>
+                <td>🇹🇬 Togo</td>
+                <td>1 actif</td>
+                <td><span class="badge badge-green">Actif</span></td>
+                <td><button class="btn-secondary btn-sm">Voir</button></td>
+              </tr>
+              <tr>
+                <td class="td-main">Thomas Renard</td>
+                <td>t.renard@email.com</td>
+                <td>🇫🇷 France</td>
+                <td>0</td>
+                <td><span class="badge badge-gray">En attente</span></td>
+                <td><button class="btn-secondary btn-sm">Voir</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════ ADMIN: DOCUMENTS ════ -->
+      <div class="page" id="page-admin-documents">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div class="section-title" style="font-size:1.3rem;">Gestion des Documents</div>
+          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="showToast('📎 Uploader un document')">+ Ajouter</button>
+        </div>
+        <div class="card">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Document</th><th>Projet</th><th>Client</th><th>Type</th><th>Date</th><th>Visible client</th></tr>
+            </thead>
+            <tbody id="admin-docs-tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════ ADMIN: NOTIFICATIONS ════ -->
+      <div class="page" id="page-admin-notifications">
+        <div class="section-header" style="margin-bottom:20px;">
+          <div class="section-title" style="font-size:1.3rem;">Envoyer une notification client</div>
+        </div>
+        <div class="card" style="max-width:600px;">
+          <div class="admin-form">
+            <div class="form-group-admin">
+              <label class="form-label-admin">Client destinataire</label>
+              <select class="form-control">
+                <option>Kofi Asante — client@example.com</option>
+                <option>Mawuli Agbeko — m.agbeko@email.com</option>
+              </select>
+            </div>
+            <div class="form-group-admin">
+              <label class="form-label-admin">Projet concerné</label>
+              <select class="form-control">
+                <option>#TLS-0047 — Électronique</option>
+                <option>#TLS-0051 — Textile</option>
+              </select>
+            </div>
+            <div class="form-group-admin">
+              <label class="form-label-admin">Type de notification</label>
+              <select class="form-control">
+                <option>🔔 Information générale</option>
+                <option>🚢 Mise à jour logistique</option>
+                <option>📄 Nouveau document</option>
+                <option>⚠️ Attention requise</option>
+              </select>
+            </div>
+            <div class="form-group-admin">
+              <label class="form-label-admin">Message</label>
+              <textarea class="form-control" rows="4" placeholder="Message envoyé au client dans son espace..."></textarea>
+            </div>
+            <div class="admin-actions-bar">
+              <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="showToast('📤 Notification envoyée au client')">
+                📤 Envoyer la notification
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </main>
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════
+     MODALS
+══════════════════════════════════════ -->
+<!-- New Project Modal -->
+<div class="modal-overlay" id="modal-new-project">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">+ Créer un nouveau projet</div>
+      <button class="modal-close" onclick="closeModal('modal-new-project')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="admin-form">
+        <div class="form-row">
+          <div class="form-group-admin">
+            <label class="form-label-admin">Référence projet</label>
+            <input class="form-control" placeholder="TLS-0000" id="new-proj-ref">
+          </div>
+          <div class="form-group-admin">
+            <label class="form-label-admin">Client</label>
+            <select class="form-control" id="new-proj-client">
+              <option>Kofi Asante</option>
+              <option>Mawuli Agbeko</option>
+              <option>Thomas Renard</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Nom du projet / produit</label>
+          <input class="form-control" placeholder="Ex: Électronique & Smartphones" id="new-proj-name">
+        </div>
+        <div class="form-row">
+          <div class="form-group-admin">
+            <label class="form-label-admin">Catégorie</label>
+            <select class="form-control">
+              <option>Électronique</option><option>Textile</option><option>Automobile</option>
+              <option>Cosmétiques</option><option>Construction</option><option>Autre</option>
+            </select>
+          </div>
+          <div class="form-group-admin">
+            <label class="form-label-admin">Quantité</label>
+            <input class="form-control" placeholder="Ex: 500 unités">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-admin">
+            <label class="form-label-admin">Pays d'origine</label>
+            <input class="form-control" value="Chine">
+          </div>
+          <div class="form-group-admin">
+            <label class="form-label-admin">Pays de destination</label>
+            <input class="form-control" placeholder="Ex: Côte d'Ivoire">
+          </div>
+        </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Statut initial</label>
+          <select class="form-control">
+            <option value="0">Projet soumis</option>
+            <option value="1">Sourcing fournisseurs</option>
+          </select>
+        </div>
+        <div class="admin-actions-bar">
+          <button class="btn-secondary" onclick="closeModal('modal-new-project')">Annuler</button>
+          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="createProject()">✅ Créer le projet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Client Modal -->
+<div class="modal-overlay" id="modal-new-client">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">+ Créer un compte client</div>
+      <button class="modal-close" onclick="closeModal('modal-new-client')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="admin-form">
+        <div class="form-row">
+          <div class="form-group-admin">
+            <label class="form-label-admin">Prénom</label>
+            <input class="form-control" placeholder="Prénom">
+          </div>
+          <div class="form-group-admin">
+            <label class="form-label-admin">Nom</label>
+            <input class="form-control" placeholder="Nom">
+          </div>
+        </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Email</label>
+          <input class="form-control" type="email" placeholder="client@email.com">
+        </div>
+        <div class="form-row">
+          <div class="form-group-admin">
+            <label class="form-label-admin">Téléphone</label>
+            <input class="form-control" placeholder="+225...">
+          </div>
+          <div class="form-group-admin">
+            <label class="form-label-admin">Pays</label>
+            <input class="form-control" placeholder="Côte d'Ivoire">
+          </div>
+        </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Mot de passe provisoire</label>
+          <input class="form-control" type="password" placeholder="••••••••">
+        </div>
+        <div class="admin-actions-bar">
+          <button class="btn-secondary" onclick="closeModal('modal-new-client')">Annuler</button>
+          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="showToast('✅ Compte client créé !');closeModal('modal-new-client')">✅ Créer le compte</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="modal-register" style="z-index:600;">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">👤 Créer votre compte client</div>
+      <button class="modal-close" onclick="closeModal('modal-register')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:rgba(91,141,238,0.08);border:1px solid rgba(91,141,238,0.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:0.83rem;color:var(--iceBlue,#C8D8F0);line-height:1.6;">
+        🔐 La création de compte est réservée aux clients TLS Global Trade. Une fois votre demande soumise, notre équipe activera votre accès sous 24h.
+      </div>
+      <div class="admin-form">
+        <div class="form-row">
+          <div class="form-group-admin">
+            <label class="form-label-admin">Prénom *</label>
+            <input class="form-control" id="reg-prenom" placeholder="Votre prénom">
+          </div>
+          <div class="form-group-admin">
+            <label class="form-label-admin">Nom *</label>
+            <input class="form-control" id="reg-nom" placeholder="Votre nom">
+          </div>
+        </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Email *</label>
+          <input class="form-control" type="email" id="reg-email" placeholder="votre@email.com">
+        </div>
+        <div class="form-row">
+          <div class="form-group-admin">
+            <label class="form-label-admin">Téléphone</label>
+            <input class="form-control" id="reg-tel" placeholder="+225 07...">
+          </div>
+          <div class="form-group-admin">
+            <label class="form-label-admin">Pays *</label>
+            <select class="form-control" id="reg-pays">
+              <option value="">Sélectionner...</option>
+              <option>🇫🇷 France</option>
+              <option>🇨🇮 Côte d'Ivoire</option>
+              <option>🇹🇬 Togo</option>
+              <option>🇲🇦 Maroc</option>
+              <option>🇸🇳 Sénégal</option>
+              <option>🇨🇲 Cameroun</option>
+              <option>🇧🇪 Belgique</option>
+              <option>Autre</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Type de projet envisagé</label>
+          <select class="form-control" id="reg-projet">
+            <option value="">Sélectionner...</option>
+            <option>🔍 Sourcing fournisseur</option>
+            <option>📦 Import complet (sourcing + logistique)</option>
+            <option>🚢 Logistique uniquement</option>
+            <option>🧠 Conseil import/export</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Mot de passe *</label>
+          <input class="form-control" type="password" id="reg-pass" placeholder="Minimum 8 caractères">
+        </div>
+        <div style="font-size:0.78rem;color:var(--mist,#6b8399);margin-bottom:12px;line-height:1.5;">
+          En créant votre compte, vous acceptez nos conditions d'utilisation. Vos données sont confidentielles.
+        </div>
+        <div class="admin-actions-bar" style="border:none;padding-top:0;">
+          <button class="btn-secondary" onclick="closeModal('modal-register')">Annuler</button>
+          <button class="btn-primary" onclick="submitRegister()">📤 Soumettre ma demande</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA STORE (simulated database)
+// ══════════════════════════════════════════
+const DB = {
+  users: {
+    'client@example.com':      { password:'demo1234', role:'client', name:'Kofi Asante', initials:'KA' },
+    'admin@tlsglobaltrade.com':{ password:'admin2024', role:'admin', name:'Admin TLS', initials:'TLS' },
+  },
+  projects: {
+    'TLS-0047': {
+      ref:'TLS-0047', name:'Électronique & Smartphones', client:'Kofi Asante',
+      category:'Électronique', type:'Smartphones & Accessoires', qty:'500 unités',
+      origin:'Chine (Shenzhen)', destination:'Côte d\'Ivoire (Abidjan)',
+      budget:'Confidentiel', timeline:'45-60 jours',
+      currentStage: 6, // 0-indexed (0=soumis, 6=en transit)
+      contact:'Équipe TLS Global Trade',
+      activity:[
+        { text:'📦 Votre expédition a quitté le port de Shenzhen', time:'Aujourd\'hui, 14:23', type:'blue' },
+        { text:'✅ Contrôle qualité réussi — rapport disponible', time:'Hier, 10:05', type:'green' },
+        { text:'⚓ Marchandises prêtes pour l\'expédition', time:'Il y a 3 jours', type:'blue' },
+        { text:'🏭 Production terminée et validée', time:'Il y a 5 jours', type:'green' },
+        { text:'📋 Devis approuvé par le client', time:'Il y a 2 semaines', type:'amber' },
+        { text:'🔍 Fournisseur sélectionné : Shenzhen Electronics Co.', time:'Il y a 3 semaines', type:'green' },
+      ],
+      documents:[
+        { name:'Devis Commercial', icon:'📋', size:'2.3 MB', file:'Devis_TLS-0047.pdf' },
+        { name:'Facture Proforma', icon:'🧾', size:'1.1 MB', file:'Facture_TLS-0047.pdf' },
+        { name:'Bill of Lading', icon:'🚢', size:'800 KB', file:'BL_TLS-0047.pdf' },
+        { name:'Rapport QC', icon:'✅', size:'4.7 MB', file:'QC_Report_TLS-0047.pdf' },
+      ]
+    },
+    'TLS-0051': {
+      ref:'TLS-0051', name:'Textile & Vêtements', client:'Kofi Asante',
+      category:'Textile', type:'Vêtements prêt-à-porter', qty:'1 200 pièces',
+      origin:'Chine (Guangzhou)', destination:'Togo (Lomé)',
+      budget:'Confidentiel', timeline:'60-75 jours',
+      currentStage: 3,
+      contact:'Équipe TLS Global Trade',
+      activity:[
+        { text:'📋 Devis confirmé et production lancée', time:'Il y a 2 jours', type:'amber' },
+        { text:'🔍 Fournisseur validé : Guangzhou Premium Textiles Co. Ltd', time:'Il y a 3 jours', type:'green' },
+        { text:'🔎 Sourcing fournisseurs en cours — 5 candidats identifiés', time:'Il y a 5 jours', type:'blue' },
+        { text:'📝 Projet soumis et confirmé par TLS', time:'Il y a 1 semaine', type:'green' },
+      ],
+      documents:[
+        { name:'Devis Commercial', icon:'📋', size:'1.8 MB', file:'Devis_TLS-0051.pdf' },
+        { name:'Fiche Fournisseur', icon:'🏭', size:'650 KB', file:'Fournisseur_TLS-0051.pdf' },
+      ]
+    }
+  }
+};
+
+const STAGES = [
+  'Projet soumis',
+  'Sourcing\nfournisseurs',
+  'Fournisseur\nvalidé',
+  'Devis\nenvoyé',
+  'Production',
+  'Prêt cargo',
+  'En transit',
+  'Dédouanement',
+  'Livraison'
+];
+
+const STATUS_MAP = {
+  0:{label:'Projet soumis',   badge:'badge-gray',  color:'#6b8399'},
+  1:{label:'Sourcing',        badge:'badge-blue',  color:'#5b8dee'},
+  2:{label:'Fournisseur OK',  badge:'badge-green', color:'#10b981'},
+  3:{label:'En production',   badge:'badge-amber', color:'#f59e0b'},
+  4:{label:'En production',   badge:'badge-amber', color:'#f59e0b'},
+  5:{label:'Prêt cargo',      badge:'badge-blue',  color:'#5b8dee'},
+  6:{label:'En transit',      badge:'badge-blue',  color:'#5b8dee'},
+  7:{label:'Dédouanement',    badge:'badge-amber', color:'#f59e0b'},
+  8:{label:'Livré',           badge:'badge-green', color:'#10b981'},
+};
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let currentRole = 'client';
+let currentUser = null;
+let currentEditProject = null;
+let selectedStatus = null;
+
+// ══════════════════════════════════════════
+// LOGIN / LOGOUT
+// ══════════════════════════════════════════
+function setRole(role, el) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('login-sub').textContent = 
+    role === 'admin' ? 'Accès réservé à l\'équipe TLS Global Trade' : 'Accédez à votre espace client sécurisé';
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value.trim();
+  const user  = DB.users[email];
+  if (!user || user.password !== pass) {
+    alert('Identifiants incorrects. Utilisez les codes de démo affichés.');
+    return;
+  }
+  if (currentRole === 'admin' && user.role !== 'admin') {
+    alert('Accès administrateur refusé.');
+    return;
+  }
+  if (currentRole === 'client' && user.role !== 'client') {
+    alert('Accès client refusé. Utilisez l\'onglet Administration.');
+    return;
+  }
+  currentUser = { ...user, email };
+  initApp();
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+}
+
+function initApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Set user info
+  document.getElementById('user-avatar').textContent = currentUser.initials;
+  document.getElementById('user-name').textContent   = currentUser.name;
+  document.getElementById('user-email').textContent  = currentUser.email;
+
+  if (currentUser.role === 'admin') {
+    document.getElementById('role-badge').textContent = 'BACK-OFFICE ADMIN';
+    document.getElementById('role-badge').classList.add('admin');
+    document.getElementById('client-nav').style.display = 'none';
+    document.getElementById('admin-nav').style.display = 'block';
+    document.getElementById('notif-indicator').style.display = 'none';
+    showPage('admin-dashboard', null);
+    renderAdminProjectsTable();
+    renderAdminDocsTable();
+  } else {
+    document.getElementById('role-badge').textContent = 'ESPACE CLIENT';
+    document.getElementById('greeting-name').textContent = `Bonjour, ${currentUser.name.split(' ')[0]} 👋`;
+    showPage('dashboard', null);
+  }
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function showPage(pageId, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+
+  const titles = {
+    'dashboard':'Tableau de bord','projects':'Mes projets','documents':'Documents',
+    'notifications':'Notifications','profile':'Mon profil',
+    'admin-dashboard':'Vue d\'ensemble','admin-projects':'Projets clients',
+    'admin-clients':'Clients','admin-documents':'Documents','admin-notifications':'Notifications'
+  };
+  document.getElementById('topbar-title').textContent = titles[pageId] || pageId;
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════════
+// PROJECT DETAIL (client)
+// ══════════════════════════════════════════
+function openProjectDetail(ref) {
+  const proj = DB.projects[ref];
+  if (!proj) return;
+  showPage('project-detail', null);
+
+  document.getElementById('detail-ref').textContent = `📦 Projet #${proj.ref}`;
+  document.getElementById('detail-name').textContent = proj.name;
+
+  const st = STATUS_MAP[proj.currentStage];
+  document.getElementById('detail-badge').innerHTML = `<span class="badge ${st.badge}">${st.label}</span>`;
+
+  // Progress
+  const pct = Math.round((proj.currentStage / 8) * 100);
+  document.getElementById('detail-progress-pct').textContent = `${pct}% · Étape ${proj.currentStage+1}/9`;
+  document.getElementById('detail-progress-bar').style.width = pct + '%';
+
+  // Stages
+  const stagesEl = document.getElementById('stages-row');
+  stagesEl.innerHTML = '';
+  STAGES.forEach((stage, i) => {
+    const div = document.createElement('div');
+    let cls = i < proj.currentStage ? 'done' : i === proj.currentStage ? 'active' : 'pending';
+    div.className = `stage-item ${cls}`;
+    const connCls = i < proj.currentStage ? 'done' : i === proj.currentStage ? 'active' : '';
+    div.innerHTML = `
+      ${i < STAGES.length-1 ? `<div class="stage-connector ${connCls}"></div>` : ''}
+      <div class="stage-dot ${cls}">${i < proj.currentStage ? '✓' : i+1}</div>
+      <div class="stage-label">${stage}</div>
+    `;
+    stagesEl.appendChild(div);
+  });
+
+  // Info table
+  const infoData = [
+    ['Catégorie', proj.category], ['Type produit', proj.type],
+    ['Quantité', proj.qty], ['Origine', proj.origin],
+    ['Destination', proj.destination], ['Délai estimé', proj.timeline],
+    ['Contact TLS', proj.contact]
+  ];
+  document.getElementById('detail-info-table').innerHTML = infoData.map(([k,v]) =>
+    `<tr class="project-info-row"><td class="project-info-label">${k}</td><td class="project-info-value">${v}</td></tr>`
+  ).join('');
+
+  // Activity
+  document.getElementById('detail-activity').innerHTML = proj.activity.map((a,i) => `
+    <div class="activity-item">
+      <div class="activity-dot-col">
+        <div class="activity-dot" style="background:var(--${a.type})"></div>
+        ${i < proj.activity.length-1 ? '<div class="activity-line"></div>' : ''}
+      </div>
+      <div class="activity-content">
+        <div class="activity-text">${a.text}</div>
+        <div class="activity-time">${a.time}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Documents
+  document.getElementById('detail-docs').innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">` +
+    proj.documents.map(d => `
+      <div class="doc-card" style="flex-direction:row;text-align:left;" onclick="fakeDownload('${d.file}')">
+        <div class="doc-icon" style="font-size:1.5rem;">${d.icon}</div>
+        <div style="flex:1;">
+          <div class="doc-name">${d.name}</div>
+          <div class="doc-meta">${d.size} · PDF</div>
+        </div>
+        <button class="doc-dl-btn" style="width:auto;padding:6px 12px;">⬇</button>
+      </div>
+    `).join('') + `</div>`;
+}
+
+// ══════════════════════════════════════════
+// ADMIN: PROJECT MANAGEMENT
+// ══════════════════════════════════════════
+function renderAdminProjectsTable() {
+  const tbody = document.getElementById('admin-projects-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = Object.values(DB.projects).map(proj => {
+    const st = STATUS_MAP[proj.currentStage];
+    const pct = Math.round((proj.currentStage / 8) * 100);
+    return `
+      <tr>
+        <td class="td-main">#${proj.ref}</td>
+        <td>${proj.client}</td>
+        <td>${proj.name}</td>
+        <td>${proj.origin} → ${proj.destination}</td>
+        <td><span class="badge ${st.badge}">${st.label}</span></td>
+        <td>
+          <div class="mini-bar" style="width:80px;display:inline-block;"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:0.75rem;color:var(--silver);margin-left:6px;">${pct}%</span>
+        </td>
+        <td><button class="btn-primary btn-sm" style="background:var(--amber);color:#000;" onclick="openAdminProjectEdit('${proj.ref}')">Gérer</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderAdminDocsTable() {
+  const tbody = document.getElementById('admin-docs-tbody');
+  if (!tbody) return;
+  const allDocs = [];
+  Object.values(DB.projects).forEach(p => {
+    p.documents.forEach(d => allDocs.push({ ...d, proj: p.ref, client: p.client }));
+  });
+  tbody.innerHTML = allDocs.map(d => `
+    <tr>
+      <td class="td-main">${d.icon} ${d.name}</td>
+      <td>#${d.proj}</td>
+      <td>${d.client}</td>
+      <td>${d.size}</td>
+      <td>Récent</td>
+      <td><span class="badge badge-green">✓ Visible</span></td>
+    </tr>
+  `).join('');
+}
+
+function openAdminProjectEdit(ref) {
+  currentEditProject = ref;
+  const proj = DB.projects[ref];
+  selectedStatus = proj.currentStage;
+
+  document.getElementById('admin-project-list').style.display = 'none';
+  document.getElementById('admin-project-edit').style.display = 'block';
+  document.getElementById('admin-edit-title').textContent = `Modifier le projet #${ref} — ${proj.name}`;
+
+  // Status buttons
+  const btns = document.getElementById('status-buttons');
+  btns.innerHTML = STAGES.map((s, i) => `
+    <button class="btn-secondary btn-sm ${i === proj.currentStage ? 'active' : ''}"
+      style="justify-content:flex-start;gap:10px;text-align:left;${i===selectedStatus?'border:2px solid var(--blue);color:var(--blue);':''}"
+      onclick="selectStatus(${i},this)">
+      <span style="width:24px;height:24px;border-radius:50%;background:${i<proj.currentStage?'var(--green)':i===proj.currentStage?'var(--blue)':'rgba(255,255,255,0.1)'};display:inline-flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">${i<proj.currentStage?'✓':i+1}</span>
+      ${s.replace('\n',' ')}
+    </button>
+  `).join('');
+
+  showPage('admin-projects', null);
+}
+
+function selectStatus(idx, btn) {
+  selectedStatus = idx;
+  document.querySelectorAll('#status-buttons button').forEach(b => {
+    b.style.border = '1px solid rgba(255,255,255,0.1)';
+    b.style.color = 'var(--silver)';
+  });
+  btn.style.border = '2px solid var(--blue)';
+  btn.style.color = 'var(--blue)';
+}
+
+function saveProjectStatus() {
+  if (currentEditProject === null || selectedStatus === null) return;
+  DB.projects[currentEditProject].currentStage = selectedStatus;
+
+  const st = STATUS_MAP[selectedStatus];
+  // Auto-add to activity
+  DB.projects[currentEditProject].activity.unshift({
+    text: `🔄 Statut mis à jour : ${st.label}`,
+    time: 'À l\'instant (mis à jour par TLS)',
+    type: 'blue'
+  });
+
+  renderAdminProjectsTable();
+  showToast(`✅ Statut mis à jour → ${st.label}\nLe client voit maintenant le nouveau statut.`);
+}
+
+function addProjectUpdate() {
+  const text = document.getElementById('admin-update-text').value.trim();
+  if (!text || !currentEditProject) return;
+  DB.projects[currentEditProject].activity.unshift({
+    text, time: 'À l\'instant', type: 'blue'
+  });
+  document.getElementById('admin-update-text').value = '';
+  showToast('📤 Mise à jour publiée — visible par le client');
+}
+
+function addProjectDoc() {
+  const name = document.getElementById('admin-doc-name').value.trim();
+  const type = document.getElementById('admin-doc-type').value;
+  if (!name || !currentEditProject) return;
+  const icon = type.split(' ')[0];
+  DB.projects[currentEditProject].documents.push({
+    name, icon, size:'—', file: name.replace(/ /g,'_')+'.pdf'
+  });
+  document.getElementById('admin-doc-name').value = '';
+  renderAdminDocsTable();
+  showToast('📎 Document ajouté — visible par le client');
+}
+
+function createProject() {
+  const ref  = document.getElementById('new-proj-ref').value.trim();
+  const name = document.getElementById('new-proj-name').value.trim();
+  const client = document.getElementById('new-proj-client').value;
+  if (!ref || !name) { alert('Référence et nom obligatoires'); return; }
+  DB.projects[ref] = {
+    ref, name, client, category:'', type:'', qty:'',
+    origin:'Chine', destination:'',
+    budget:'—', timeline:'—', currentStage:0, contact:'Équipe TLS',
+    activity:[{ text:'📝 Projet créé par TLS Global Trade', time:'À l\'instant', type:'green' }],
+    documents:[]
+  };
+  renderAdminProjectsTable();
+  closeModal('modal-new-project');
+  showToast(`✅ Projet #${ref} créé et visible par le client`);
+}
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function fakeDownload(filename) {
+  showToast(`⬇ Téléchargement : ${filename}`);
+}
+
+function openRegisterModal() {
+  document.getElementById('modal-register').classList.add('open');
+}
+
+function submitRegister() {
+  const prenom = document.getElementById('reg-prenom').value.trim();
+  const nom    = document.getElementById('reg-nom').value.trim();
+  const email  = document.getElementById('reg-email').value.trim();
+  const pays   = document.getElementById('reg-pays').value;
+  const pass   = document.getElementById('reg-pass').value;
+
+  if (!prenom || !nom || !email || !pays || !pass) {
+    alert('Veuillez remplir tous les champs obligatoires (*)');
+    return;
+  }
+  if (pass.length < 8) {
+    alert('Le mot de passe doit contenir au moins 8 caractères');
+    return;
+  }
+
+  // Simulate account creation
+  closeModal('modal-register');
+  
+  // Show success screen
+  document.getElementById('login-page').innerHTML = `
+    <div class="login-card" style="text-align:center;max-width:460px;">
+      <div style="font-size:3rem;margin-bottom:16px;">✅</div>
+      <div style="font-size:1.3rem;font-weight:800;color:var(--white);margin-bottom:10px;">Demande envoyée !</div>
+      <div style="font-size:0.9rem;color:var(--silver);line-height:1.7;margin-bottom:24px;">
+        Bonjour <strong style="color:var(--white);">${prenom} ${nom}</strong>,<br>
+        votre demande de compte client a bien été reçue.<br><br>
+        L'équipe TLS Global Trade activera votre accès dans les <strong style="color:var(--blue);">24 heures</strong>.<br>
+        Vous recevrez vos identifiants à l'adresse <strong style="color:var(--white);">${email}</strong>.
+      </div>
+      <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:14px;margin-bottom:20px;font-size:0.82rem;color:#10b981;">
+        📧 Un email de confirmation vous a été envoyé.
+      </div>
+      <button onclick="goBackToSite()" style="padding:12px 24px;background:var(--blue);color:var(--white);border-radius:8px;font-weight:700;font-size:0.9rem;cursor:pointer;border:none;">
+        ← Retour au site TLS Global Trade
+      </button>
+    </div>
+  `;
+}
+
+
+function goBackToSite() {
+  // CAS 1 : dashboard ouvert en nouvel onglet depuis le site
+  // → on revient sur l'onglet du site et on ferme le dashboard
+  if (window.opener && !window.opener.closed) {
+    window.opener.focus();
+    window.close();
+    return;
+  }
+  // CAS 2 : URL mémorisée (referrer stocké)
+  var savedUrl = sessionStorage.getItem('tls_parent_url');
+  if (savedUrl) {
+    window.location.href = savedUrl;
+    return;
+  }
+  // CAS 3 : historique navigateur
+  if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+  // CAS 4 : fermer l'onglet (si possible)
+  window.close();
+}
+
+</script>
+</body>
+</html>
