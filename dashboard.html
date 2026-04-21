@@ -1604,150 +1604,137 @@ textarea.form-control{resize:vertical;min-height:80px;}
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ══════════════════════════════════════════
-// DATA STORE (simulated database)
+// SUPABASE CONFIG
 // ══════════════════════════════════════════
-const DB = {
-  users: {
-    'client@example.com':      { password:'demo1234', role:'client', name:'Kofi Asante', initials:'KA' },
-    'admin@tlsglobaltrade.com':{ password:'admin2024', role:'admin', name:'Admin TLS', initials:'TLS' },
-  },
-  projects: {
-    'TLS-0047': {
-      ref:'TLS-0047', name:'Électronique & Smartphones', client:'Kofi Asante',
-      category:'Électronique', type:'Smartphones & Accessoires', qty:'500 unités',
-      origin:'Chine (Shenzhen)', destination:'Côte d\'Ivoire (Abidjan)',
-      budget:'Confidentiel', timeline:'45-60 jours',
-      currentStage: 6, // 0-indexed (0=soumis, 6=en transit)
-      contact:'Équipe TLS Global Trade',
-      activity:[
-        { text:'📦 Votre expédition a quitté le port de Shenzhen', time:'Aujourd\'hui, 14:23', type:'blue' },
-        { text:'✅ Contrôle qualité réussi — rapport disponible', time:'Hier, 10:05', type:'green' },
-        { text:'⚓ Marchandises prêtes pour l\'expédition', time:'Il y a 3 jours', type:'blue' },
-        { text:'🏭 Production terminée et validée', time:'Il y a 5 jours', type:'green' },
-        { text:'📋 Devis approuvé par le client', time:'Il y a 2 semaines', type:'amber' },
-        { text:'🔍 Fournisseur sélectionné : Shenzhen Electronics Co.', time:'Il y a 3 semaines', type:'green' },
-      ],
-      documents:[
-        { name:'Devis Commercial', icon:'📋', size:'2.3 MB', file:'Devis_TLS-0047.pdf' },
-        { name:'Facture Proforma', icon:'🧾', size:'1.1 MB', file:'Facture_TLS-0047.pdf' },
-        { name:'Bill of Lading', icon:'🚢', size:'800 KB', file:'BL_TLS-0047.pdf' },
-        { name:'Rapport QC', icon:'✅', size:'4.7 MB', file:'QC_Report_TLS-0047.pdf' },
-      ]
-    },
-    'TLS-0051': {
-      ref:'TLS-0051', name:'Textile & Vêtements', client:'Kofi Asante',
-      category:'Textile', type:'Vêtements prêt-à-porter', qty:'1 200 pièces',
-      origin:'Chine (Guangzhou)', destination:'Togo (Lomé)',
-      budget:'Confidentiel', timeline:'60-75 jours',
-      currentStage: 3,
-      contact:'Équipe TLS Global Trade',
-      activity:[
-        { text:'📋 Devis confirmé et production lancée', time:'Il y a 2 jours', type:'amber' },
-        { text:'🔍 Fournisseur validé : Guangzhou Premium Textiles Co. Ltd', time:'Il y a 3 jours', type:'green' },
-        { text:'🔎 Sourcing fournisseurs en cours — 5 candidats identifiés', time:'Il y a 5 jours', type:'blue' },
-        { text:'📝 Projet soumis et confirmé par TLS', time:'Il y a 1 semaine', type:'green' },
-      ],
-      documents:[
-        { name:'Devis Commercial', icon:'📋', size:'1.8 MB', file:'Devis_TLS-0051.pdf' },
-        { name:'Fiche Fournisseur', icon:'🏭', size:'650 KB', file:'Fournisseur_TLS-0051.pdf' },
-      ]
-    }
-  }
-};
+const SUPABASE_URL = 'https://hmtfrzugpllucbhuflny.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtdGZyenVncGxsdWNiaHVmbG55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MjcwNzUsImV4cCI6MjA2MDMwMzA3NX0.Qxo6sKDMNsMREsKRq_oy4eh5xTvb3r-a5gH6UgWBgHY';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════════════════════════════════════════
+// ÉTAT GLOBAL
+// ══════════════════════════════════════════
+let currentUser = null;
+let currentProfile = null;
+let currentEditProject = null;
+let currentRole = 'client';
 
 const STAGES = [
-  'Projet soumis',
-  'Sourcing\nfournisseurs',
-  'Fournisseur\nvalidé',
-  'Devis\nenvoyé',
-  'Production',
-  'Prêt cargo',
-  'En transit',
-  'Dédouanement',
-  'Livraison'
+  'Demande reçue','Analyse & Devis','Validation commande',
+  'Production','Contrôle qualité','Préparation expédition',
+  'En transit','Dédouanement','Livré'
 ];
 
-const STATUS_MAP = {
-  0:{label:'Projet soumis',   badge:'badge-gray',  color:'#6b8399'},
-  1:{label:'Sourcing',        badge:'badge-blue',  color:'#5b8dee'},
-  2:{label:'Fournisseur OK',  badge:'badge-green', color:'#10b981'},
-  3:{label:'En production',   badge:'badge-amber', color:'#f59e0b'},
-  4:{label:'En production',   badge:'badge-amber', color:'#f59e0b'},
-  5:{label:'Prêt cargo',      badge:'badge-blue',  color:'#5b8dee'},
-  6:{label:'En transit',      badge:'badge-blue',  color:'#5b8dee'},
-  7:{label:'Dédouanement',    badge:'badge-amber', color:'#f59e0b'},
-  8:{label:'Livré',           badge:'badge-green', color:'#10b981'},
-};
+const STATUS_MAP = [
+  {label:'Demande reçue',    badge:'badge-info'},
+  {label:'Analyse & Devis',  badge:'badge-info'},
+  {label:'Validation',       badge:'badge-warning'},
+  {label:'Production',       badge:'badge-warning'},
+  {label:'Contrôle qualité', badge:'badge-warning'},
+  {label:'Préparation expéd.',badge:'badge-warning'},
+  {label:'En transit',       badge:'badge-blue'},
+  {label:'Dédouanement',     badge:'badge-blue'},
+  {label:'Livré',            badge:'badge-success'}
+];
 
 // ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
-let currentRole = 'client';
-let currentUser = null;
-let currentEditProject = null;
-let selectedStatus = null;
-
-// ══════════════════════════════════════════
-// LOGIN / LOGOUT
+// AUTH - LOGIN / LOGOUT
 // ══════════════════════════════════════════
 function setRole(role, el) {
   currentRole = role;
   document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('login-sub').textContent = 
-    role === 'admin' ? 'Accès réservé à l\'équipe TLS Global Trade' : 'Accédez à votre espace client sécurisé';
+  if (el) el.classList.add('active');
+  const sub = document.getElementById('login-sub');
+  if (sub) sub.textContent = role === 'admin' 
+    ? "Accès réservé à l'équipe TLS Global Trade" 
+    : 'Accédez à votre espace client sécurisé';
 }
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-password').value.trim();
-  const user  = DB.users[email];
-  if (!user || user.password !== pass) {
-    alert('Identifiants incorrects. Utilisez les codes de démo affichés.');
-    return;
+  if (!email || !pass) { alert('Veuillez remplir email et mot de passe.'); return; }
+
+  const btn = document.querySelector('.btn-login');
+  btn.textContent = 'Connexion...';
+  btn.disabled = true;
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+
+    // Récupérer le profil
+    const { data: profile, error: pErr } = await supabase
+      .from('profiles').select('*').eq('id', data.user.id).single();
+    if (pErr) throw pErr;
+
+    currentUser = data.user;
+    currentProfile = profile;
+
+    // Vérifier le rôle
+    if (currentRole === 'admin' && profile.role !== 'admin') {
+      await supabase.auth.signOut();
+      throw new Error('Accès administrateur refusé.');
+    }
+    if (currentRole === 'client' && profile.role !== 'client') {
+      await supabase.auth.signOut();
+      throw new Error("Accès client refusé. Utilisez l'onglet Administration.");
+    }
+
+    initApp();
+  } catch(e) {
+    alert(e.message || 'Identifiants incorrects.');
+  } finally {
+    btn.textContent = 'Se connecter →';
+    btn.disabled = false;
   }
-  if (currentRole === 'admin' && user.role !== 'admin') {
-    alert('Accès administrateur refusé.');
-    return;
-  }
-  if (currentRole === 'client' && user.role !== 'client') {
-    alert('Accès client refusé. Utilisez l\'onglet Administration.');
-    return;
-  }
-  currentUser = { ...user, email };
-  initApp();
 }
 
-function doLogout() {
+async function doLogout() {
+  await supabase.auth.signOut();
   currentUser = null;
+  currentProfile = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-page').style.display = 'flex';
 }
 
+// ══════════════════════════════════════════
+// INIT APP APRÈS LOGIN
+// ══════════════════════════════════════════
 function initApp() {
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('app').style.display = 'block';
 
-  // Set user info
-  document.getElementById('user-avatar').textContent = currentUser.initials;
-  document.getElementById('user-name').textContent   = currentUser.name;
-  document.getElementById('user-email').textContent  = currentUser.email;
+  const name = currentProfile.full_name || currentProfile.email || 'Client';
+  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
 
-  if (currentUser.role === 'admin') {
-    document.getElementById('role-badge').textContent = 'BACK-OFFICE ADMIN';
-    document.getElementById('role-badge').classList.add('admin');
-    document.getElementById('client-nav').style.display = 'none';
-    document.getElementById('admin-nav').style.display = 'block';
-    document.getElementById('notif-indicator').style.display = 'none';
+  const avatarEl = document.getElementById('user-avatar');
+  const nameEl   = document.getElementById('user-name');
+  const emailEl  = document.getElementById('user-email');
+  if (avatarEl) avatarEl.textContent = initials;
+  if (nameEl)   nameEl.textContent   = name;
+  if (emailEl)  emailEl.textContent  = currentProfile.email;
+
+  if (currentProfile.role === 'admin') {
+    const badge = document.getElementById('role-badge');
+    if (badge) { badge.textContent = 'BACK-OFFICE ADMIN'; badge.classList.add('admin'); }
+    const clientNav = document.getElementById('client-nav');
+    const adminNav  = document.getElementById('admin-nav');
+    const notifInd  = document.getElementById('notif-indicator');
+    if (clientNav) clientNav.style.display = 'none';
+    if (adminNav)  adminNav.style.display  = 'block';
+    if (notifInd)  notifInd.style.display  = 'none';
     showPage('admin-dashboard', null);
-    renderAdminProjectsTable();
-    renderAdminDocsTable();
+    loadAdminDashboard();
   } else {
-    document.getElementById('role-badge').textContent = 'ESPACE CLIENT';
-    document.getElementById('greeting-name').textContent = `Bonjour, ${currentUser.name.split(' ')[0]} 👋`;
+    const badge = document.getElementById('role-badge');
+    if (badge) badge.textContent = 'ESPACE CLIENT';
+    const greet = document.getElementById('greeting-name');
+    if (greet) greet.textContent = `Bonjour, ${name.split(' ')[0]} 👋`;
     showPage('dashboard', null);
+    loadClientDashboard();
   }
 }
 
@@ -1758,317 +1745,615 @@ function showPage(pageId, navEl) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const page = document.getElementById('page-' + pageId);
   if (page) page.classList.add('active');
-
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (navEl) navEl.classList.add('active');
-
   const titles = {
     'dashboard':'Tableau de bord','projects':'Mes projets','documents':'Documents',
     'notifications':'Notifications','profile':'Mon profil',
-    'admin-dashboard':'Vue d\'ensemble','admin-projects':'Projets clients',
+    'admin-dashboard':"Vue d'ensemble",'admin-projects':'Projets clients',
     'admin-clients':'Clients','admin-documents':'Documents','admin-notifications':'Notifications'
   };
-  document.getElementById('topbar-title').textContent = titles[pageId] || pageId;
+  const titleEl = document.getElementById('topbar-title');
+  if (titleEl) titleEl.textContent = titles[pageId] || pageId;
+
+  // Charger les données selon la page
+  if (pageId === 'projects') loadClientProjects();
+  if (pageId === 'documents') loadClientDocuments();
+  if (pageId === 'notifications') loadClientNotifications();
+  if (pageId === 'profile') loadClientProfile();
+  if (pageId === 'admin-projects') loadAdminProjects();
+  if (pageId === 'admin-clients') loadAdminClients();
+  if (pageId === 'admin-documents') loadAdminDocs();
+  if (pageId === 'admin-notifications') loadAdminNotifications();
   window.scrollTo(0,0);
 }
 
 // ══════════════════════════════════════════
-// PROJECT DETAIL (client)
+// CLIENT — DASHBOARD
 // ══════════════════════════════════════════
-function openProjectDetail(ref) {
-  const proj = DB.projects[ref];
-  if (!proj) return;
-  showPage('project-detail', null);
+async function loadClientDashboard() {
+  const { data: projects } = await supabase
+    .from('projects').select('*').eq('client_id', currentUser.id);
+  
+  if (!projects || projects.length === 0) {
+    const el = document.getElementById('client-projects-summary');
+    if (el) el.innerHTML = '<p style="color:var(--silver);text-align:center;padding:24px">Aucun projet en cours.</p>';
+    return;
+  }
 
-  document.getElementById('detail-ref').textContent = `📦 Projet #${proj.ref}`;
-  document.getElementById('detail-name').textContent = proj.name;
+  // Afficher les projets récents sur le dashboard
+  const el = document.getElementById('client-projects-summary');
+  if (el) {
+    el.innerHTML = projects.slice(0,3).map(p => {
+      const stage = STATUS_MAP[p.current_stage] || STATUS_MAP[0];
+      const pct = Math.round((p.current_stage / 8) * 100);
+      return `
+        <div class="project-row" onclick="openProjectDetail('${p.id}')" style="cursor:pointer;">
+          <div class="project-row-left">
+            <div class="project-ref">${p.reference}</div>
+            <div class="project-name">${p.name}</div>
+          </div>
+          <div class="project-row-right">
+            <span class="badge ${stage.badge}">${stage.label}</span>
+            <div class="mini-progress"><div style="width:${pct}%"></div></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
 
-  const st = STATUS_MAP[proj.currentStage];
-  document.getElementById('detail-badge').innerHTML = `<span class="badge ${st.badge}">${st.label}</span>`;
-
-  // Progress
-  const pct = Math.round((proj.currentStage / 8) * 100);
-  document.getElementById('detail-progress-pct').textContent = `${pct}% · Étape ${proj.currentStage+1}/9`;
-  document.getElementById('detail-progress-bar').style.width = pct + '%';
-
-  // Stages
-  const stagesEl = document.getElementById('stages-row');
-  stagesEl.innerHTML = '';
-  STAGES.forEach((stage, i) => {
-    const div = document.createElement('div');
-    let cls = i < proj.currentStage ? 'done' : i === proj.currentStage ? 'active' : 'pending';
-    div.className = `stage-item ${cls}`;
-    const connCls = i < proj.currentStage ? 'done' : i === proj.currentStage ? 'active' : '';
-    div.innerHTML = `
-      ${i < STAGES.length-1 ? `<div class="stage-connector ${connCls}"></div>` : ''}
-      <div class="stage-dot ${cls}">${i < proj.currentStage ? '✓' : i+1}</div>
-      <div class="stage-label">${stage}</div>
-    `;
-    stagesEl.appendChild(div);
-  });
-
-  // Info table
-  const infoData = [
-    ['Catégorie', proj.category], ['Type produit', proj.type],
-    ['Quantité', proj.qty], ['Origine', proj.origin],
-    ['Destination', proj.destination], ['Délai estimé', proj.timeline],
-    ['Contact TLS', proj.contact]
-  ];
-  document.getElementById('detail-info-table').innerHTML = infoData.map(([k,v]) =>
-    `<tr class="project-info-row"><td class="project-info-label">${k}</td><td class="project-info-value">${v}</td></tr>`
-  ).join('');
-
-  // Activity
-  document.getElementById('detail-activity').innerHTML = proj.activity.map((a,i) => `
-    <div class="activity-item">
-      <div class="activity-dot-col">
-        <div class="activity-dot" style="background:var(--${a.type})"></div>
-        ${i < proj.activity.length-1 ? '<div class="activity-line"></div>' : ''}
-      </div>
-      <div class="activity-content">
-        <div class="activity-text">${a.text}</div>
-        <div class="activity-time">${a.time}</div>
-      </div>
-    </div>
-  `).join('');
-
-  // Documents
-  document.getElementById('detail-docs').innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">` +
-    proj.documents.map(d => `
-      <div class="doc-card" style="flex-direction:row;text-align:left;" onclick="fakeDownload('${d.file}')">
-        <div class="doc-icon" style="font-size:1.5rem;">${d.icon}</div>
-        <div style="flex:1;">
-          <div class="doc-name">${d.name}</div>
-          <div class="doc-meta">${d.size} · PDF</div>
-        </div>
-        <button class="doc-dl-btn" style="width:auto;padding:6px 12px;">⬇</button>
-      </div>
-    `).join('') + `</div>`;
+  // Stats
+  const activeCount = projects.filter(p => p.current_stage < 8).length;
+  const doneCount = projects.filter(p => p.current_stage === 8).length;
+  const statA = document.getElementById('stat-active');
+  const statD = document.getElementById('stat-done');
+  if (statA) statA.textContent = activeCount;
+  if (statD) statD.textContent = doneCount;
 }
 
 // ══════════════════════════════════════════
-// ADMIN: PROJECT MANAGEMENT
+// CLIENT — PROJETS
 // ══════════════════════════════════════════
-function renderAdminProjectsTable() {
-  const tbody = document.getElementById('admin-projects-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = Object.values(DB.projects).map(proj => {
-    const st = STATUS_MAP[proj.currentStage];
-    const pct = Math.round((proj.currentStage / 8) * 100);
+async function loadClientProjects() {
+  const container = document.getElementById('projects-list');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>';
+
+  const { data: projects, error } = await supabase
+    .from('projects').select('*').eq('client_id', currentUser.id).order('created_at', {ascending:false});
+
+  if (error || !projects || projects.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Aucun projet pour le moment.</div>';
+    return;
+  }
+
+  container.innerHTML = projects.map(p => {
+    const stage = STATUS_MAP[p.current_stage] || STATUS_MAP[0];
+    const pct = Math.round((p.current_stage / 8) * 100);
     return `
-      <tr>
-        <td class="td-main">#${proj.ref}</td>
-        <td>${proj.client}</td>
-        <td>${proj.name}</td>
-        <td>${proj.origin} → ${proj.destination}</td>
-        <td><span class="badge ${st.badge}">${st.label}</span></td>
-        <td>
-          <div class="mini-bar" style="width:80px;display:inline-block;"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
-          <span style="font-size:0.75rem;color:var(--silver);margin-left:6px;">${pct}%</span>
-        </td>
-        <td><button class="btn-primary btn-sm" style="background:var(--amber);color:#000;" onclick="openAdminProjectEdit('${proj.ref}')">Gérer</button></td>
-      </tr>
-    `;
+      <div class="project-card" onclick="openProjectDetail('${p.id}')" style="cursor:pointer;">
+        <div class="project-card-header">
+          <div>
+            <div class="project-ref">${p.reference}</div>
+            <div class="project-name">${p.name}</div>
+          </div>
+          <span class="badge ${stage.badge}">${stage.label}</span>
+        </div>
+        <div class="project-meta">
+          <span>📦 ${p.product_type || 'N/A'}</span>
+          <span>🚢 ${p.origin_country || 'Chine'} → ${p.destination_country || 'N/A'}</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" style="width:${pct}%"></div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--mist);margin-top:6px">Étape ${p.current_stage+1}/9 · ${pct}%</div>
+      </div>`;
   }).join('');
 }
 
-function renderAdminDocsTable() {
-  const tbody = document.getElementById('admin-docs-tbody');
-  if (!tbody) return;
-  const allDocs = [];
-  Object.values(DB.projects).forEach(p => {
-    p.documents.forEach(d => allDocs.push({ ...d, proj: p.ref, client: p.client }));
-  });
-  tbody.innerHTML = allDocs.map(d => `
-    <tr>
-      <td class="td-main">${d.icon} ${d.name}</td>
-      <td>#${d.proj}</td>
-      <td>${d.client}</td>
-      <td>${d.size}</td>
-      <td>Récent</td>
-      <td><span class="badge badge-green">✓ Visible</span></td>
-    </tr>
-  `).join('');
+// ══════════════════════════════════════════
+// CLIENT — DETAIL PROJET
+// ══════════════════════════════════════════
+async function openProjectDetail(projectId) {
+  showPage('project-detail', null);
+
+  const { data: proj } = await supabase.from('projects').select('*').eq('id', projectId).single();
+  if (!proj) return;
+
+  document.getElementById('detail-ref').textContent = `📦 Projet ${proj.reference}`;
+  document.getElementById('detail-name').textContent = proj.name;
+
+  const st = STATUS_MAP[proj.current_stage] || STATUS_MAP[0];
+  const badge = document.getElementById('detail-badge');
+  if (badge) badge.innerHTML = `<span class="badge ${st.badge}">${st.label}</span>`;
+
+  const pct = Math.round((proj.current_stage / 8) * 100);
+  const pctEl = document.getElementById('detail-progress-pct');
+  const barEl = document.getElementById('detail-progress-bar');
+  if (pctEl) pctEl.textContent = `${pct}% · Étape ${proj.current_stage+1}/9`;
+  if (barEl) barEl.style.width = pct + '%';
+
+  // Stages
+  const stagesEl = document.getElementById('stages-row');
+  if (stagesEl) {
+    stagesEl.innerHTML = STAGES.map((stage, i) => {
+      const cls = i < proj.current_stage ? 'done' : i === proj.current_stage ? 'active' : 'pending';
+      return `<div class="stage-item ${cls}"><div class="stage-dot"></div><div class="stage-label">${stage}</div></div>`;
+    }).join('');
+  }
+
+  // Updates
+  const { data: updates } = await supabase
+    .from('project_updates').select('*').eq('project_id', projectId).order('created_at', {ascending:false});
+  
+  const updEl = document.getElementById('detail-updates');
+  if (updEl) {
+    if (!updates || updates.length === 0) {
+      updEl.innerHTML = '<div style="color:var(--mist);font-size:0.85rem">Aucune mise à jour pour le moment.</div>';
+    } else {
+      updEl.innerHTML = updates.map(u => `
+        <div class="update-item">
+          <div class="update-dot"></div>
+          <div class="update-body">
+            <div class="update-msg">${u.message}</div>
+            <div class="update-date">${new Date(u.created_at).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'})}</div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  // Documents
+  const { data: docs } = await supabase
+    .from('documents').select('*').eq('project_id', projectId);
+  
+  const docsEl = document.getElementById('detail-docs');
+  if (docsEl) {
+    if (!docs || docs.length === 0) {
+      docsEl.innerHTML = '<div style="color:var(--mist);font-size:0.85rem">Aucun document disponible.</div>';
+    } else {
+      docsEl.innerHTML = docs.map(d => `
+        <div class="doc-card">
+          <div class="doc-icon">${d.icon || '📄'}</div>
+          <div class="doc-name">${d.file_name}</div>
+          <div class="doc-meta">${d.file_type || ''} ${d.file_size ? '· ' + d.file_size : ''}</div>
+          ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="doc-dl-btn">⬇ Télécharger</a>` : '<button class="doc-dl-btn" disabled>Non disponible</button>'}
+        </div>`).join('');
+    }
+  }
 }
 
-function openAdminProjectEdit(ref) {
-  currentEditProject = ref;
-  const proj = DB.projects[ref];
-  selectedStatus = proj.currentStage;
+// ══════════════════════════════════════════
+// CLIENT — DOCUMENTS
+// ══════════════════════════════════════════
+async function loadClientDocuments() {
+  const container = document.getElementById('doc-grid');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>';
 
-  document.getElementById('admin-project-list').style.display = 'none';
-  document.getElementById('admin-project-edit').style.display = 'block';
-  document.getElementById('admin-edit-title').textContent = `Modifier le projet #${ref} — ${proj.name}`;
+  const { data: projects } = await supabase.from('projects').select('id').eq('client_id', currentUser.id);
+  if (!projects || projects.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Aucun document disponible.</div>';
+    return;
+  }
 
-  // Status buttons
-  const btns = document.getElementById('status-buttons');
-  btns.innerHTML = STAGES.map((s, i) => `
-    <button class="btn-secondary btn-sm ${i === proj.currentStage ? 'active' : ''}"
-      style="justify-content:flex-start;gap:10px;text-align:left;${i===selectedStatus?'border:2px solid var(--blue);color:var(--blue);':''}"
-      onclick="selectStatus(${i},this)">
-      <span style="width:24px;height:24px;border-radius:50%;background:${i<proj.currentStage?'var(--green)':i===proj.currentStage?'var(--blue)':'rgba(255,255,255,0.1)'};display:inline-flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">${i<proj.currentStage?'✓':i+1}</span>
-      ${s.replace('\n',' ')}
-    </button>
-  `).join('');
+  const projectIds = projects.map(p => p.id);
+  const { data: docs } = await supabase.from('documents').select('*').in('project_id', projectIds);
+  
+  if (!docs || docs.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Aucun document disponible.</div>';
+    return;
+  }
 
+  container.innerHTML = docs.map(d => `
+    <div class="doc-card">
+      <div class="doc-icon">${d.icon || '📄'}</div>
+      <div class="doc-name">${d.file_name}</div>
+      <div class="doc-meta">${d.file_type || ''} ${d.file_size ? '· ' + d.file_size : ''}</div>
+      ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="doc-dl-btn">⬇ Télécharger</a>` : '<button class="doc-dl-btn" disabled>Non disponible</button>'}
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// CLIENT — NOTIFICATIONS
+// ══════════════════════════════════════════
+async function loadClientNotifications() {
+  const container = document.getElementById('notif-list');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>';
+
+  const { data: notifs } = await supabase
+    .from('notifications').select('*').eq('client_id', currentUser.id).order('created_at', {ascending:false});
+
+  if (!notifs || notifs.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Aucune notification.</div>';
+    return;
+  }
+
+  // Marquer comme lues
+  await supabase.from('notifications').update({is_read:true}).eq('client_id', currentUser.id).eq('is_read', false);
+
+  container.innerHTML = notifs.map(n => `
+    <div class="notif-item ${n.is_read ? '' : 'unread'}">
+      <div class="notif-dot"></div>
+      <div class="notif-body">
+        <div class="notif-msg">${n.message}</div>
+        <div class="notif-date">${new Date(n.created_at).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'})}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// CLIENT — PROFIL
+// ══════════════════════════════════════════
+async function loadClientProfile() {
+  if (!currentProfile) return;
+  const fields = ['full_name','email','phone','country'];
+  fields.forEach(f => {
+    const el = document.getElementById('profile-' + f.replace('_','-'));
+    if (el) el.value = currentProfile[f] || '';
+  });
+}
+
+async function saveProfile() {
+  const updates = {
+    full_name: document.getElementById('profile-full-name')?.value,
+    phone: document.getElementById('profile-phone')?.value,
+    country: document.getElementById('profile-country')?.value,
+  };
+  const { error } = await supabase.from('profiles').update(updates).eq('id', currentUser.id);
+  if (error) { showToast('Erreur lors de la sauvegarde.', 'error'); return; }
+  currentProfile = {...currentProfile, ...updates};
+  showToast('Profil mis à jour !');
+}
+
+// ══════════════════════════════════════════
+// ADMIN — DASHBOARD
+// ══════════════════════════════════════════
+async function loadAdminDashboard() {
+  const { data: projects } = await supabase.from('projects').select('*');
+  const { data: clients } = await supabase.from('profiles').select('*').eq('role', 'client');
+
+  const statProj = document.getElementById('admin-stat-projects');
+  const statClients = document.getElementById('admin-stat-clients');
+  const statActive = document.getElementById('admin-stat-active');
+  if (statProj) statProj.textContent = projects?.length || 0;
+  if (statClients) statClients.textContent = clients?.length || 0;
+  if (statActive) statActive.textContent = projects?.filter(p => p.current_stage < 8).length || 0;
+
+  // Recent projects
+  const recentEl = document.getElementById('admin-recent-projects');
+  if (recentEl && projects) {
+    recentEl.innerHTML = projects.slice(0,5).map(p => {
+      const stage = STATUS_MAP[p.current_stage] || STATUS_MAP[0];
+      return `
+        <tr onclick="openAdminProjectDetail('${p.id}')" style="cursor:pointer">
+          <td>${p.reference}</td>
+          <td>${p.name}</td>
+          <td><span class="badge ${stage.badge}">${stage.label}</span></td>
+          <td>${new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
+        </tr>`;
+    }).join('');
+  }
+}
+
+// ══════════════════════════════════════════
+// ADMIN — PROJETS
+// ══════════════════════════════════════════
+async function loadAdminProjects() {
+  const container = document.getElementById('admin-projects-tbody');
+  if (!container) return;
+  container.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--silver);padding:20px">Chargement...</td></tr>';
+
+  const { data: projects } = await supabase
+    .from('projects')
+    .select('*, profiles(full_name, email)')
+    .order('created_at', {ascending:false});
+
+  if (!projects || projects.length === 0) {
+    container.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--silver);padding:20px">Aucun projet.</td></tr>';
+    return;
+  }
+
+  container.innerHTML = projects.map(p => {
+    const stage = STATUS_MAP[p.current_stage] || STATUS_MAP[0];
+    const clientName = p.profiles?.full_name || p.profiles?.email || 'N/A';
+    return `
+      <tr>
+        <td>${p.reference}</td>
+        <td>${p.name}</td>
+        <td>${clientName}</td>
+        <td><span class="badge ${stage.badge}">${stage.label}</span></td>
+        <td>
+          <button class="btn-sm btn-secondary" onclick="openAdminProjectDetail('${p.id}')">Gérer</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function openAdminProjectDetail(projectId) {
+  showPage('admin-project-edit', null);
+  
+  const { data: proj } = await supabase.from('projects').select('*, profiles(full_name, email)').eq('id', projectId).single();
+  if (!proj) return;
+
+  currentEditProject = proj;
+
+  document.getElementById('edit-ref').textContent = proj.reference;
+  document.getElementById('edit-name').textContent = proj.name;
+  document.getElementById('edit-client').textContent = proj.profiles?.full_name || proj.profiles?.email || 'N/A';
+
+  // Status selector
+  const stageEl = document.getElementById('edit-stage-select');
+  if (stageEl) {
+    stageEl.innerHTML = STAGES.map((s,i) => 
+      `<option value="${i}" ${i === proj.current_stage ? 'selected' : ''}>${i+1}. ${s}</option>`
+    ).join('');
+  }
+
+  // Existing updates
+  const { data: updates } = await supabase
+    .from('project_updates').select('*').eq('project_id', projectId).order('created_at', {ascending:false});
+  
+  const updEl = document.getElementById('admin-updates-list');
+  if (updEl) {
+    updEl.innerHTML = (updates || []).map(u => `
+      <div class="update-item">
+        <div class="update-dot"></div>
+        <div class="update-body">
+          <div class="update-msg">${u.message}</div>
+          <div class="update-date">${new Date(u.created_at).toLocaleDateString('fr-FR')}</div>
+        </div>
+      </div>`).join('') || '<div style="color:var(--mist);font-size:0.85rem">Aucune mise à jour.</div>';
+  }
+
+  // Documents
+  const { data: docs } = await supabase.from('documents').select('*').eq('project_id', projectId);
+  const docsEl = document.getElementById('admin-project-docs');
+  if (docsEl) {
+    docsEl.innerHTML = (docs || []).map(d => `
+      <div class="doc-card">
+        <div class="doc-icon">${d.icon || '📄'}</div>
+        <div class="doc-name">${d.file_name}</div>
+        <div class="doc-meta">${d.file_type || ''}</div>
+      </div>`).join('') || '<div style="color:var(--mist);font-size:0.85rem">Aucun document.</div>';
+  }
+}
+
+async function saveProjectStatus() {
+  if (!currentEditProject) return;
+  const stageEl = document.getElementById('edit-stage-select');
+  const msgEl   = document.getElementById('edit-update-msg');
+  if (!stageEl) return;
+
+  const newStage = parseInt(stageEl.value);
+  const message  = msgEl?.value?.trim();
+
+  // Update project stage
+  const { error: projErr } = await supabase
+    .from('projects').update({ current_stage: newStage, updated_at: new Date().toISOString() }).eq('id', currentEditProject.id);
+  if (projErr) { showToast('Erreur mise à jour projet.', 'error'); return; }
+
+  // Add update message
+  if (message) {
+    await supabase.from('project_updates').insert({
+      project_id: currentEditProject.id,
+      message: message,
+      update_type: 'status'
+    });
+
+    // Notification pour le client
+    await supabase.from('notifications').insert({
+      client_id: currentEditProject.client_id,
+      project_id: currentEditProject.id,
+      message: `Mise à jour sur votre projet ${currentEditProject.reference} : ${message}`
+    });
+
+    if (msgEl) msgEl.value = '';
+  }
+
+  showToast('Projet mis à jour ! Le client verra les changements immédiatement.');
+  openAdminProjectDetail(currentEditProject.id);
+}
+
+// ══════════════════════════════════════════
+// ADMIN — CRÉER UN PROJET
+// ══════════════════════════════════════════
+async function loadAdminClients() {
+  const { data: clients } = await supabase.from('profiles').select('*').eq('role', 'client');
+  const tbody = document.getElementById('admin-clients-tbody');
+  if (tbody) {
+    tbody.innerHTML = (clients || []).map(c => `
+      <tr>
+        <td>${c.full_name || 'N/A'}</td>
+        <td>${c.email}</td>
+        <td>${c.country || 'N/A'}</td>
+        <td>${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><button class="btn-sm btn-secondary" onclick="createProjectForClient('${c.id}', '${c.full_name || c.email}')">+ Projet</button></td>
+      </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--silver);padding:20px">Aucun client.</td></tr>';
+  }
+
+  // Remplir le select client dans le modal création projet
+  const clientSelect = document.getElementById('new-project-client');
+  if (clientSelect && clients) {
+    clientSelect.innerHTML = '<option value="">Sélectionner un client...</option>' +
+      clients.map(c => `<option value="${c.id}">${c.full_name || c.email}</option>`).join('');
+  }
+}
+
+function createProjectForClient(clientId, clientName) {
+  const clientSelect = document.getElementById('new-project-client');
+  if (clientSelect) clientSelect.value = clientId;
+  document.getElementById('modal-new-project').classList.add('open');
+}
+
+async function submitNewProject() {
+  const clientId   = document.getElementById('new-project-client')?.value;
+  const name       = document.getElementById('new-project-name')?.value?.trim();
+  const productType= document.getElementById('new-project-type')?.value?.trim();
+  const quantity   = document.getElementById('new-project-qty')?.value?.trim();
+  const dest       = document.getElementById('new-project-dest')?.value?.trim();
+
+  if (!clientId || !name) { alert('Client et nom du projet requis.'); return; }
+
+  // Générer une référence unique
+  const ref = 'TLS-' + Date.now().toString().slice(-4);
+
+  const { error } = await supabase.from('projects').insert({
+    client_id: clientId,
+    reference: ref,
+    name,
+    product_type: productType,
+    quantity,
+    destination_country: dest,
+    current_stage: 0
+  });
+
+  if (error) { showToast('Erreur création projet : ' + error.message, 'error'); return; }
+
+  closeModal('modal-new-project');
+  showToast(`Projet ${ref} créé avec succès !`);
+  loadAdminProjects();
   showPage('admin-projects', null);
 }
 
-function selectStatus(idx, btn) {
-  selectedStatus = idx;
-  document.querySelectorAll('#status-buttons button').forEach(b => {
-    b.style.border = '1px solid rgba(255,255,255,0.1)';
-    b.style.color = 'var(--silver)';
-  });
-  btn.style.border = '2px solid var(--blue)';
-  btn.style.color = 'var(--blue)';
-}
-
-function saveProjectStatus() {
-  if (currentEditProject === null || selectedStatus === null) return;
-  DB.projects[currentEditProject].currentStage = selectedStatus;
-
-  const st = STATUS_MAP[selectedStatus];
-  // Auto-add to activity
-  DB.projects[currentEditProject].activity.unshift({
-    text: `🔄 Statut mis à jour : ${st.label}`,
-    time: 'À l\'instant (mis à jour par TLS)',
-    type: 'blue'
-  });
-
-  renderAdminProjectsTable();
-  showToast(`✅ Statut mis à jour → ${st.label}\nLe client voit maintenant le nouveau statut.`);
-}
-
-function addProjectUpdate() {
-  const text = document.getElementById('admin-update-text').value.trim();
-  if (!text || !currentEditProject) return;
-  DB.projects[currentEditProject].activity.unshift({
-    text, time: 'À l\'instant', type: 'blue'
-  });
-  document.getElementById('admin-update-text').value = '';
-  showToast('📤 Mise à jour publiée — visible par le client');
-}
-
-function addProjectDoc() {
-  const name = document.getElementById('admin-doc-name').value.trim();
-  const type = document.getElementById('admin-doc-type').value;
-  if (!name || !currentEditProject) return;
-  const icon = type.split(' ')[0];
-  DB.projects[currentEditProject].documents.push({
-    name, icon, size:'—', file: name.replace(/ /g,'_')+'.pdf'
-  });
-  document.getElementById('admin-doc-name').value = '';
-  renderAdminDocsTable();
-  showToast('📎 Document ajouté — visible par le client');
-}
-
-function createProject() {
-  const ref  = document.getElementById('new-proj-ref').value.trim();
-  const name = document.getElementById('new-proj-name').value.trim();
-  const client = document.getElementById('new-proj-client').value;
-  if (!ref || !name) { alert('Référence et nom obligatoires'); return; }
-  DB.projects[ref] = {
-    ref, name, client, category:'', type:'', qty:'',
-    origin:'Chine', destination:'',
-    budget:'—', timeline:'—', currentStage:0, contact:'Équipe TLS',
-    activity:[{ text:'📝 Projet créé par TLS Global Trade', time:'À l\'instant', type:'green' }],
-    documents:[]
-  };
-  renderAdminProjectsTable();
-  closeModal('modal-new-project');
-  showToast(`✅ Projet #${ref} créé et visible par le client`);
+// ══════════════════════════════════════════
+// ADMIN — DOCUMENTS
+// ══════════════════════════════════════════
+async function loadAdminDocs() {
+  const { data: docs } = await supabase.from('documents').select('*, projects(reference, name)');
+  const tbody = document.getElementById('admin-documents-tbody');
+  if (tbody) {
+    tbody.innerHTML = (docs || []).map(d => `
+      <tr>
+        <td>${d.icon || '📄'} ${d.file_name}</td>
+        <td>${d.projects?.reference || 'N/A'}</td>
+        <td>${d.file_type || 'N/A'}</td>
+        <td>${new Date(d.uploaded_at).toLocaleDateString('fr-FR')}</td>
+        <td>${d.file_url ? `<a href="${d.file_url}" target="_blank" class="btn-sm btn-secondary">Voir</a>` : 'N/A'}</td>
+      </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--silver);padding:20px">Aucun document.</td></tr>';
+  }
 }
 
 // ══════════════════════════════════════════
-// UTILS
+// ADMIN — NOTIFICATIONS
 // ══════════════════════════════════════════
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+async function loadAdminNotifications() {
+  const { data: notifs } = await supabase
+    .from('notifications').select('*, profiles(full_name, email), projects(reference)')
+    .order('created_at', {ascending:false});
+  
+  const container = document.getElementById('admin-notif-list');
+  if (container) {
+    container.innerHTML = (notifs || []).map(n => `
+      <div class="notif-item">
+        <div class="notif-dot"></div>
+        <div class="notif-body">
+          <div class="notif-msg"><strong>${n.profiles?.full_name || n.profiles?.email || 'Client'}</strong> — ${n.message}</div>
+          <div class="notif-date">${new Date(n.created_at).toLocaleDateString('fr-FR')}</div>
+        </div>
+      </div>`).join('') || '<div style="text-align:center;padding:40px;color:var(--silver)">Aucune notification.</div>';
+  }
+}
 
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
+// ══════════════════════════════════════════
+// MODAL + TOAST
+// ══════════════════════════════════════════
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+}
 
-function showToast(msg) {
+function showToast(msg, type='success') {
   const t = document.getElementById('toast');
+  if (!t) return;
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+  t.className = 'toast show' + (type === 'error' ? ' toast-error' : '');
+  setTimeout(() => t.className = 'toast', 3500);
 }
 
-function fakeDownload(filename) {
-  showToast(`⬇ Téléchargement : ${filename}`);
-}
-
+// ══════════════════════════════════════════
+// INSCRIPTION
+// ══════════════════════════════════════════
 function openRegisterModal() {
   document.getElementById('modal-register').classList.add('open');
 }
 
-function submitRegister() {
-  const prenom = document.getElementById('reg-prenom').value.trim();
-  const nom    = document.getElementById('reg-nom').value.trim();
-  const email  = document.getElementById('reg-email').value.trim();
-  const pays   = document.getElementById('reg-pays').value;
-  const pass   = document.getElementById('reg-pass').value;
+async function submitRegister() {
+  const prenom = document.getElementById('reg-prenom')?.value?.trim();
+  const nom    = document.getElementById('reg-nom')?.value?.trim();
+  const email  = document.getElementById('reg-email')?.value?.trim();
+  const pass   = document.getElementById('reg-pass')?.value;
 
-  if (!prenom || !nom || !email || !pays || !pass) {
-    alert('Veuillez remplir tous les champs obligatoires (*)');
-    return;
-  }
-  if (pass.length < 8) {
-    alert('Le mot de passe doit contenir au moins 8 caractères');
-    return;
-  }
+  if (!prenom || !nom || !email || !pass) { alert('Veuillez remplir tous les champs obligatoires.'); return; }
+  if (pass.length < 8) { alert('Le mot de passe doit contenir au moins 8 caractères.'); return; }
 
-  // Simulate account creation
+  const { error } = await supabase.auth.signUp({
+    email,
+    password: pass,
+    options: { data: { full_name: prenom + ' ' + nom, role: 'client' } }
+  });
+
+  if (error) { alert('Erreur : ' + error.message); return; }
+
   closeModal('modal-register');
-  
-  // Show success screen
   document.getElementById('login-page').innerHTML = `
     <div class="login-card" style="text-align:center;max-width:460px;">
       <div style="font-size:3rem;margin-bottom:16px;">✅</div>
       <div style="font-size:1.3rem;font-weight:800;color:var(--white);margin-bottom:10px;">Demande envoyée !</div>
       <div style="font-size:0.9rem;color:var(--silver);line-height:1.7;margin-bottom:24px;">
-        Bonjour <strong style="color:var(--white);">${prenom} ${nom}</strong>,<br>
-        votre demande de compte client a bien été reçue.<br><br>
-        L'équipe TLS Global Trade activera votre accès dans les <strong style="color:var(--blue);">24 heures</strong>.<br>
-        Vous recevrez vos identifiants à l'adresse <strong style="color:var(--white);">${email}</strong>.
-      </div>
-      <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:14px;margin-bottom:20px;font-size:0.82rem;color:#10b981;">
-        📧 Un email de confirmation vous a été envoyé.
+        Bonjour <strong style="color:var(--white)">${prenom} ${nom}</strong>,<br>
+        votre compte a été créé. Vérifiez votre email <strong style="color:var(--white)">${email}</strong><br>
+        pour confirmer votre inscription.
       </div>
       <button onclick="goBackToSite()" style="padding:12px 24px;background:var(--blue);color:var(--white);border-radius:8px;font-weight:700;font-size:0.9rem;cursor:pointer;border:none;">
         ← Retour au site TLS Global Trade
       </button>
-    </div>
-  `;
+    </div>`;
 }
 
-
+// ══════════════════════════════════════════
+// RETOUR AU SITE
+// ══════════════════════════════════════════
 function goBackToSite() {
-  // CAS 1 : dashboard ouvert en nouvel onglet depuis le site
-  // → on revient sur l'onglet du site et on ferme le dashboard
   if (window.opener && !window.opener.closed) {
     window.opener.focus();
     window.close();
     return;
   }
-  // CAS 2 : URL mémorisée (referrer stocké)
-  var savedUrl = sessionStorage.getItem('tls_parent_url');
-  if (savedUrl) {
-    window.location.href = savedUrl;
-    return;
-  }
-  // CAS 3 : historique navigateur
-  if (window.history.length > 1) {
-    window.history.back();
-    return;
-  }
-  // CAS 4 : fermer l'onglet (si possible)
+  const saved = sessionStorage.getItem('tls_parent_url');
+  if (saved) { window.location.href = saved; return; }
+  if (window.history.length > 1) { window.history.back(); return; }
   window.close();
 }
 
+// ══════════════════════════════════════════
+// INIT AU CHARGEMENT
+// ══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async function() {
+  if (document.referrer) sessionStorage.setItem('tls_parent_url', document.referrer);
+
+  // Vérifier si déjà connecté
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+    if (profile) {
+      currentUser = session.user;
+      currentProfile = profile;
+      currentRole = profile.role;
+      initApp();
+      return;
+    }
+  }
+
+  // Sinon afficher login
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+
+  // Paramètre ?register=1
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('register') === '1') {
+    setTimeout(() => openRegisterModal(), 400);
+  }
+});
 </script>
 </body>
 </html>
