@@ -89,15 +89,21 @@ input,textarea,select{font-family:inherit;}
 .login-logo-text span{color:var(--blue);}
 .login-role-tabs {
   display:grid;grid-template-columns:1fr 1fr;
-  gap:2px;background:rgba(255,255,255,0.05);
-  border-radius:8px;padding:3px;margin-bottom:28px;
+  gap:4px;background:rgba(255,255,255,0.06);
+  border-radius:10px;padding:4px;margin-bottom:28px;
 }
 .role-tab {
-  padding:10px;text-align:center;border-radius:6px;
-  font-size:0.82rem;font-weight:600;color:var(--silver);
-  transition:all 0.2s;cursor:pointer;
+  padding:11px;text-align:center;border-radius:8px;
+  font-size:0.85rem;font-weight:600;color:var(--silver);
+  transition:all 0.2s;cursor:pointer;user-select:none;
+  border:2px solid transparent;
 }
-.role-tab.active{background:var(--blue);color:var(--white);}
+.role-tab:hover{color:var(--white);background:rgba(255,255,255,0.08);}
+.role-tab.active{
+  background:var(--blue);color:var(--white);
+  border-color:rgba(255,255,255,0.2);
+  box-shadow:0 4px 12px rgba(91,141,238,0.4);
+}
 .login-title{font-size:1.4rem;font-weight:700;margin-bottom:6px;text-align:center;}
 .login-sub{font-size:0.85rem;color:var(--silver);text-align:center;margin-bottom:28px;}
 .form-group{margin-bottom:18px;}
@@ -619,11 +625,11 @@ textarea.form-control{resize:vertical;min-height:80px;}
     <div class="login-sub" id="login-sub">Accédez à votre espace client sécurisé</div>
     <div class="form-group">
       <label class="form-label">Adresse email</label>
-      <input class="form-input" type="email" id="login-email" placeholder="votre@email.com" value="client@example.com">
+      <input class="form-input" type="email" id="login-email" placeholder="votre@email.com" placeholder="votre@email.com">
     </div>
     <div class="form-group">
       <label class="form-label">Mot de passe</label>
-      <input class="form-input" type="password" id="login-password" placeholder="••••••••" value="demo1234">
+      <input class="form-input" type="password" id="login-password" placeholder="••••••••" >
     </div>
     <button class="btn-login" onclick="doLogin()">Se connecter →</button>
     <div style="text-align:center;margin-top:16px;">
@@ -1069,7 +1075,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
               </div>
               <div class="form-group-admin">
                 <label class="form-label-admin">Email</label>
-                <input class="form-control" value="client@example.com">
+                <input class="form-control" placeholder="votre@email.com">
               </div>
               <div class="form-group-admin">
                 <label class="form-label-admin">Téléphone</label>
