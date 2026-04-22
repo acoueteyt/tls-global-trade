@@ -10,7 +10,7 @@
 ═══════════════════════════════════════════ */
 :root {
   --navy:     #0A1628;
-  --navy-mid: #0D2040
+  --navy-mid: #0D2040;
   --navy-light:#132847;
   --steel:    #1A3558;
   --blue:     #5b8dee;
@@ -1618,6 +1618,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
 const SUPABASE_URL = 'https://hmtfrzugpllucbhuflny.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_3-AXivpWEl7mYWzrzRK4UQ_zmivr99v';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ══════════════════════════════════════════
 // ÉTAT GLOBAL
 // ══════════════════════════════════════════
@@ -1671,7 +1672,7 @@ async function doLogin() {
     if (error) throw error;
 
     // Récupérer le profil
-    const { data: profile, error: pErr } = await supabase
+    const { data: profile, error: pErr } = await sb
       .from('profiles').select('*').eq('id', data.user.id).single();
     if (pErr) throw pErr;
 
@@ -1777,7 +1778,7 @@ function showPage(pageId, navEl) {
 // CLIENT — DASHBOARD
 // ══════════════════════════════════════════
 async function loadClientDashboard() {
-  const { data: projects } = await supabase
+  const { data: projects } = await sb
     .from('projects').select('*').eq('client_id', currentUser.id);
   
   if (!projects || projects.length === 0) {
@@ -1823,7 +1824,7 @@ async function loadClientProjects() {
   if (!container) return;
   container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>';
 
-  const { data: projects, error } = await supabase
+  const { data: projects, error } = await sb
     .from('projects').select('*').eq('client_id', currentUser.id).order('created_at', {ascending:false});
 
   if (error || !projects || projects.length === 0) {
@@ -1887,7 +1888,7 @@ async function openProjectDetail(projectId) {
   }
 
   // Updates
-  const { data: updates } = await supabase
+  const { data: updates } = await sb
     .from('project_updates').select('*').eq('project_id', projectId).order('created_at', {ascending:false});
   
   const updEl = document.getElementById('detail-updates');
@@ -1907,7 +1908,7 @@ async function openProjectDetail(projectId) {
   }
 
   // Documents
-  const { data: docs } = await supabase
+  const { data: docs } = await sb
     .from('documents').select('*').eq('project_id', projectId);
   
   const docsEl = document.getElementById('detail-docs');
@@ -1965,7 +1966,7 @@ async function loadClientNotifications() {
   if (!container) return;
   container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>';
 
-  const { data: notifs } = await supabase
+  const { data: notifs } = await sb
     .from('notifications').select('*').eq('client_id', currentUser.id).order('created_at', {ascending:false});
 
   if (!notifs || notifs.length === 0) {
@@ -2048,7 +2049,7 @@ async function loadAdminProjects() {
   if (!container) return;
   container.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--silver);padding:20px">Chargement...</td></tr>';
 
-  const { data: projects } = await supabase
+  const { data: projects } = await sb
     .from('projects')
     .select('*, profiles(full_name, email)')
     .order('created_at', {ascending:false});
@@ -2095,7 +2096,7 @@ async function openAdminProjectDetail(projectId) {
   }
 
   // Existing updates
-  const { data: updates } = await supabase
+  const { data: updates } = await sb
     .from('project_updates').select('*').eq('project_id', projectId).order('created_at', {ascending:false});
   
   const updEl = document.getElementById('admin-updates-list');
@@ -2133,7 +2134,7 @@ async function saveProjectStatus() {
   const message  = msgEl?.value?.trim();
 
   // Update project stage
-  const { error: projErr } = await supabase
+  const { error: projErr } = await sb
     .from('projects').update({ current_stage: newStage, updated_at: new Date().toISOString() }).eq('id', currentEditProject.id);
   if (projErr) { showToast('Erreur mise à jour projet.', 'error'); return; }
 
@@ -2242,7 +2243,7 @@ async function loadAdminDocs() {
 // ADMIN — NOTIFICATIONS
 // ══════════════════════════════════════════
 async function loadAdminNotifications() {
-  const { data: notifs } = await supabase
+  const { data: notifs } = await sb
     .from('notifications').select('*, profiles(full_name, email), projects(reference)')
     .order('created_at', {ascending:false});
   
