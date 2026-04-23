@@ -1120,7 +1120,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
           <div class="greeting-title">Back-office Administrateur</div>
           <div class="greeting-sub">Gérez les projets clients, les statuts et les documents depuis cet espace.</div>
           <div class="greeting-actions">
-            <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="openModal('modal-new-project')">+ Nouveau projet</button>
+            <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="loadAdminClients();openModal('modal-new-project')">+ Nouveau projet</button>
             <button class="btn-secondary" onclick="showPage('admin-projects',null)">📦 Voir tous les projets</button>
           </div>
         </div>
@@ -1204,7 +1204,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
             <div class="section-title" style="font-size:1.3rem;">Gestion des Projets</div>
             <div class="section-sub">Modifier les statuts, ajouter des mises à jour et documents</div>
           </div>
-          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="openModal('modal-new-project')">+ Nouveau projet</button>
+          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="loadAdminClients();openModal('modal-new-project')">+ Nouveau projet</button>
         </div>
 
         <div class="card" style="margin-bottom:16px;" id="admin-project-list">
@@ -1430,57 +1430,36 @@ textarea.form-control{resize:vertical;min-height:80px;}
     </div>
     <div class="modal-body">
       <div class="admin-form">
-        <div class="form-row">
-          <div class="form-group-admin">
-            <label class="form-label-admin">Référence projet</label>
-            <input class="form-control" placeholder="TLS-0000" id="new-proj-ref">
-          </div>
-          <div class="form-group-admin">
-            <label class="form-label-admin">Client</label>
-            <select class="form-control" id="new-proj-client">
-              <option>Kofi Asante</option>
-              <option>Mawuli Agbeko</option>
-              <option>Thomas Renard</option>
-            </select>
-          </div>
+        <div class="form-group-admin">
+          <label class="form-label-admin">Client *</label>
+          <select class="form-control" id="new-project-client">
+            <option value="">Sélectionner un client...</option>
+          </select>
         </div>
         <div class="form-group-admin">
-          <label class="form-label-admin">Nom du projet / produit</label>
-          <input class="form-control" placeholder="Ex: Électronique & Smartphones" id="new-proj-name">
+          <label class="form-label-admin">Nom du projet / produit *</label>
+          <input class="form-control" placeholder="Ex: Électronique & Smartphones" id="new-project-name">
         </div>
         <div class="form-row">
           <div class="form-group-admin">
             <label class="form-label-admin">Catégorie</label>
-            <select class="form-control">
+            <select class="form-control" id="new-project-type">
               <option>Électronique</option><option>Textile</option><option>Automobile</option>
               <option>Cosmétiques</option><option>Construction</option><option>Autre</option>
             </select>
           </div>
           <div class="form-group-admin">
             <label class="form-label-admin">Quantité</label>
-            <input class="form-control" placeholder="Ex: 500 unités">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group-admin">
-            <label class="form-label-admin">Pays d'origine</label>
-            <input class="form-control" value="Chine">
-          </div>
-          <div class="form-group-admin">
-            <label class="form-label-admin">Pays de destination</label>
-            <input class="form-control" placeholder="Ex: Côte d'Ivoire">
+            <input class="form-control" id="new-project-qty" placeholder="Ex: 500 unités">
           </div>
         </div>
         <div class="form-group-admin">
-          <label class="form-label-admin">Statut initial</label>
-          <select class="form-control">
-            <option value="0">Projet soumis</option>
-            <option value="1">Sourcing fournisseurs</option>
-          </select>
+          <label class="form-label-admin">Pays de destination</label>
+          <input class="form-control" id="new-project-dest" placeholder="Ex: Côte d'Ivoire">
         </div>
         <div class="admin-actions-bar">
           <button class="btn-secondary" onclick="closeModal('modal-new-project')">Annuler</button>
-          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="createProject()">✅ Créer le projet</button>
+          <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="submitNewProject()">✅ Créer le projet</button>
         </div>
       </div>
     </div>
