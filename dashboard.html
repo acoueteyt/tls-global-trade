@@ -1086,7 +1086,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
                 <input class="form-control" value="Côte d'Ivoire">
               </div>
               <div class="admin-actions-bar">
-                <button class="btn-primary" onclick="showToast('✅ Profil mis à jour')">Enregistrer</button>
+                <button class="btn-primary" onclick="saveProfile()">Enregistrer</button>
               </div>
             </div>
           </div>
@@ -1106,7 +1106,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
                 <input class="form-control" type="password" placeholder="••••••••">
               </div>
               <div class="admin-actions-bar">
-                <button class="btn-primary" onclick="showToast('✅ Mot de passe mis à jour')">Modifier</button>
+                <button class="btn-primary" onclick="changePassword()">Modifier</button>
               </div>
             </div>
           </div>
@@ -1227,7 +1227,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
 
         <!-- ADMIN PROJECT EDIT PANEL -->
         <div id="admin-project-edit" style="display:none;">
-          <button class="btn-back" onclick="document.getElementById('admin-project-edit').style.display='none';document.getElementById('admin-project-list').style.display='block';">← Retour à la liste</button>
+          <button class="btn-back" onclick="showPage('admin-projects',null)">← Retour à la liste</button>
 
           <div class="section-title" style="font-size:1.2rem;margin-bottom:20px;" id="admin-edit-title">Modifier le projet #TLS-0047</div>
 
@@ -1271,22 +1271,22 @@ textarea.form-control{resize:vertical;min-height:80px;}
               <div class="admin-form">
                 <div class="form-group-admin">
                   <label class="form-label-admin">Nom du document</label>
-                  <input class="form-control" id="admin-doc-name" placeholder="Ex: Facture Proforma">
+                  <input class="form-control" id="doc-name-input" placeholder="Ex: Facture Proforma">
                 </div>
                 <div class="form-group-admin">
                   <label class="form-label-admin">Type</label>
-                  <select class="form-control" id="admin-doc-type">
-                    <option>📋 Devis</option>
-                    <option>🧾 Facture</option>
-                    <option>🚢 Transport</option>
-                    <option>✅ Contrôle Qualité</option>
-                    <option>🛃 Douanes</option>
-                    <option>🏭 Fournisseur</option>
+                  <select class="form-control" id="doc-type-input">
+                    <option value="Devis">📋 Devis</option>
+                    <option value="Facture">🧾 Facture</option>
+                    <option value="BL Transport">🚢 Transport / BL</option>
+                    <option value="Rapport Contrôle Qualité">✅ Contrôle Qualité</option>
+                    <option value="Douanes">🛃 Douanes</option>
+                    <option value="Fournisseur">🏭 Fournisseur</option>
                   </select>
                 </div>
                 <div class="form-group-admin">
-                  <label class="form-label-admin">Fichier (simulation)</label>
-                  <input class="form-control" type="file" accept=".pdf,.doc,.xlsx">
+                  <label class="form-label-admin">Lien URL du document (Google Drive, Dropbox…)</label>
+                  <input class="form-control" id="doc-url-input" placeholder="https://drive.google.com/...">
                 </div>
                 <div class="admin-actions-bar">
                   <button class="btn-primary" onclick="addProjectDoc()">📤 Ajouter le document</button>
@@ -1380,33 +1380,16 @@ textarea.form-control{resize:vertical;min-height:80px;}
           <div class="admin-form">
             <div class="form-group-admin">
               <label class="form-label-admin">Client destinataire</label>
-              <select class="form-control">
-                <option>Kofi Asante — client@example.com</option>
-                <option>Mawuli Agbeko — m.agbeko@email.com</option>
-              </select>
-            </div>
-            <div class="form-group-admin">
-              <label class="form-label-admin">Projet concerné</label>
-              <select class="form-control">
-                <option>#TLS-0047 — Électronique</option>
-                <option>#TLS-0051 — Textile</option>
-              </select>
-            </div>
-            <div class="form-group-admin">
-              <label class="form-label-admin">Type de notification</label>
-              <select class="form-control">
-                <option>🔔 Information générale</option>
-                <option>🚢 Mise à jour logistique</option>
-                <option>📄 Nouveau document</option>
-                <option>⚠️ Attention requise</option>
+              <select class="form-control" id="notif-client-select">
+                <option value="">Chargement des clients...</option>
               </select>
             </div>
             <div class="form-group-admin">
               <label class="form-label-admin">Message</label>
-              <textarea class="form-control" rows="4" placeholder="Message envoyé au client dans son espace..."></textarea>
+              <textarea class="form-control" id="notif-message-input" rows="4" placeholder="Message envoyé au client dans son espace..."></textarea>
             </div>
             <div class="admin-actions-bar">
-              <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="showToast('📤 Notification envoyée au client')">
+              <button class="btn-primary" style="background:var(--amber);color:#000;" onclick="sendAdminNotification()">
                 📤 Envoyer la notification
               </button>
             </div>
@@ -1595,7 +1578,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
 // SUPABASE CONFIG
 // ══════════════════════════════════════════
 const SUPABASE_URL = 'https://hmtfrzugpllucbhuflny.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_3-AXivpWEl7mYWzrzRK4UQ_zmivr99v';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtdGZyenVncGxsdWNiaHVmbG55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2ODI4MzAsImV4cCI6MjA5MjI1ODgzMH0.TpCBV8uXQmv-HLy7F_vTKEXuEgEep9aOJLifb5rACfs';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ══════════════════════════════════════════
@@ -1750,6 +1733,7 @@ function showPage(pageId, navEl) {
   if (pageId === 'admin-clients') loadAdminClients();
   if (pageId === 'admin-documents') loadAdminDocs();
   if (pageId === 'admin-notifications') loadAdminNotifications();
+  if (pageId === 'admin-notifications') loadClientsForNotifSelect();
   window.scrollTo(0,0);
 }
 
@@ -2298,6 +2282,118 @@ async function submitRegister() {
         ← Retour au site TLS Global Trade
       </button>
     </div>`;
+}
+
+// ══════════════════════════════════════════
+// ADMIN — AJOUTER UNE MISE À JOUR
+// ══════════════════════════════════════════
+async function addProjectUpdate() {
+  if (!currentEditProject) return;
+  const msgEl = document.getElementById('edit-update-msg');
+  const message = msgEl?.value?.trim();
+  if (!message) { showToast('Veuillez écrire un message.', 'error'); return; }
+
+  const { error } = await sb.from('project_updates').insert({
+    project_id: currentEditProject.id,
+    message: message,
+    update_type: 'info'
+  });
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+
+  // Notifier le client
+  await sb.from('notifications').insert({
+    client_id: currentEditProject.client_id,
+    project_id: currentEditProject.id,
+    message: `Mise à jour sur votre projet ${currentEditProject.reference} : ${message}`
+  });
+
+  if (msgEl) msgEl.value = '';
+  showToast('✅ Mise à jour publiée et client notifié !');
+  openAdminProjectDetail(currentEditProject.id);
+}
+
+// ══════════════════════════════════════════
+// ADMIN — AJOUTER UN DOCUMENT
+// ══════════════════════════════════════════
+async function addProjectDoc() {
+  if (!currentEditProject) return;
+  const nameEl = document.getElementById('doc-name-input');
+  const typeEl = document.getElementById('doc-type-input');
+  const urlEl  = document.getElementById('doc-url-input');
+
+  const fileName = nameEl?.value?.trim();
+  const fileType = typeEl?.value?.trim();
+  const fileUrl  = urlEl?.value?.trim();
+
+  if (!fileName) { showToast('Veuillez saisir un nom de document.', 'error'); return; }
+
+  const icons = { 'PDF':'📄', 'Facture':'🧾', 'Devis':'📋', 'BL':'🚢', 'Rapport':'📊', 'Contrat':'📑' };
+  const icon = Object.entries(icons).find(([k]) => fileType?.includes(k))?.[1] || '📄';
+
+  const { error } = await sb.from('documents').insert({
+    project_id: currentEditProject.id,
+    file_name: fileName,
+    file_type: fileType || 'Document',
+    file_url: fileUrl || null,
+    icon: icon,
+    uploaded_at: new Date().toISOString()
+  });
+
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+
+  if (nameEl) nameEl.value = '';
+  if (typeEl) typeEl.value = '';
+  if (urlEl)  urlEl.value  = '';
+
+  showToast('✅ Document ajouté avec succès !');
+  openAdminProjectDetail(currentEditProject.id);
+}
+
+// Alias pour compatibilité bouton HTML existant
+function openAdminProjectEdit(id) { openAdminProjectDetail(id); }
+
+// ══════════════════════════════════════════
+// CHANGER LE MOT DE PASSE
+// ══════════════════════════════════════════
+async function changePassword() {
+  const newPass = document.getElementById('profile-new-password')?.value;
+  if (!newPass || newPass.length < 8) { showToast('Mot de passe trop court (8 car. min).', 'error'); return; }
+  const { error } = await sb.auth.updateUser({ password: newPass });
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  showToast('✅ Mot de passe mis à jour !');
+  const el = document.getElementById('profile-new-password');
+  if (el) el.value = '';
+}
+
+async function loadClientsForNotifSelect() {
+  const { data: clients } = await sb.from('profiles').select('*').eq('role', 'client');
+  const sel = document.getElementById('notif-client-select');
+  if (sel && clients) {
+    sel.innerHTML = '<option value="">Sélectionner un client...</option>' +
+      clients.map(c => `<option value="${c.id}">${c.full_name || c.email} — ${c.email}</option>`).join('');
+  }
+}
+
+// ══════════════════════════════════════════
+// ADMIN — ENVOYER NOTIFICATION MANUELLE
+// ══════════════════════════════════════════
+async function sendAdminNotification() {
+  const clientEl = document.getElementById('notif-client-select');
+  const msgEl    = document.getElementById('notif-message-input');
+  const clientId = clientEl?.value;
+  const message  = msgEl?.value?.trim();
+
+  if (!clientId || !message) { showToast('Client et message requis.', 'error'); return; }
+
+  const { error } = await sb.from('notifications').insert({
+    client_id: clientId,
+    message: message
+  });
+
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+
+  if (msgEl) msgEl.value = '';
+  showToast('✅ Notification envoyée au client !');
 }
 
 // ══════════════════════════════════════════
