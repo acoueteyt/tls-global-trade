@@ -637,9 +637,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
         Pas encore client ? Créer un compte →
       </button>
     </div>
-    <div class="login-demo-hint">
-      <strong>Démo client :</strong> client@example.com / demo1234<br>
-      <strong>Démo admin :</strong> admin@tlsglobaltrade.com / admin2024
+          <strong>Démo admin :</strong> admin@tlsglobaltrade.com / admin2024
     </div>
   </div>
 </div>
@@ -711,8 +709,8 @@ textarea.form-control{resize:vertical;min-height:80px;}
       <div class="sidebar-user">
         <div class="user-avatar" id="user-avatar">KA</div>
         <div class="user-info">
-          <div class="user-name" id="user-name">Kofi Asante</div>
-          <div class="user-email" id="user-email">client@example.com</div>
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-email" id="user-email">—</div>
         </div>
         <button class="btn-logout" onclick="doLogout()">↩</button>
       </div>
@@ -740,7 +738,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
       <div class="page active" id="page-dashboard">
         <div class="greeting-banner">
           <div class="greeting-eyebrow">✦ Espace Client Premium</div>
-          <div class="greeting-title" id="greeting-name">Bonjour, Kofi 👋</div>
+          <div class="greeting-title" id="greeting-name">Bonjour 👋</div>
           <div class="greeting-sub">Vos projets avancent. Voici un résumé de votre activité en cours.</div>
           <div class="greeting-actions">
             <button class="btn-primary" onclick="showPage('projects',null)">📦 Voir mes projets</button>
@@ -751,23 +749,23 @@ textarea.form-control{resize:vertical;min-height:80px;}
         <div class="stat-grid">
           <div class="card">
             <div class="card-title">Projets actifs</div>
-            <div class="card-value">2</div>
+            <div class="card-value" id="stat-active">—</div>
             <div class="card-sub">En cours de traitement</div>
           </div>
           <div class="card">
-            <div class="card-title">Étape actuelle</div>
-            <div class="card-value" style="font-size:1.1rem;">🚢 En transit</div>
-            <div class="card-sub">Projet TLS-0047 · Shenzhen → Abidjan</div>
+            <div class="card-title">Projets livrés</div>
+            <div class="card-value" id="stat-done">—</div>
+            <div class="card-sub">Terminés avec succès</div>
           </div>
           <div class="card">
             <div class="card-title">Documents</div>
-            <div class="card-value">6</div>
-            <div class="card-sub">3 en attente de signature</div>
+            <div class="card-value" id="stat-docs">—</div>
+            <div class="card-sub">Disponibles dans votre espace</div>
           </div>
           <div class="card">
             <div class="card-title">Dernière mise à jour</div>
-            <div class="card-value" style="font-size:1rem;">Il y a 2h</div>
-            <div class="card-sub">Expédition confirmée par TLS</div>
+            <div class="card-value" style="font-size:1rem;" id="stat-last-update">—</div>
+            <div class="card-sub" id="stat-last-update-sub"></div>
           </div>
         </div>
 
@@ -780,41 +778,8 @@ textarea.form-control{resize:vertical;min-height:80px;}
               </div>
               <button class="btn-secondary btn-sm" onclick="showPage('projects',null)">Tous →</button>
             </div>
-
-            <div class="project-card" onclick="openProjectDetail('TLS-0047')">
-              <div>
-                <div class="project-ref">📦 #TLS-0047</div>
-                <div class="project-name">Électronique & Smartphones — Abidjan</div>
-                <div class="project-meta">
-                  <span class="project-meta-item">🇨🇳 Shenzhen</span>
-                  <span class="project-meta-item">→</span>
-                  <span class="project-meta-item">🇨🇮 Abidjan</span>
-                  <span class="badge badge-blue" style="margin-left:8px;">En transit</span>
-                </div>
-              </div>
-              <div class="project-progress-mini">
-                <div class="mini-bar"><div class="mini-bar-fill" style="width:78%"></div></div>
-                <div class="mini-pct">78% — Étape 7/9</div>
-                <button class="btn-primary btn-sm" style="margin-top:6px;">Voir →</button>
-              </div>
-            </div>
-
-            <div class="project-card" onclick="openProjectDetail('TLS-0051')">
-              <div>
-                <div class="project-ref">📦 #TLS-0051</div>
-                <div class="project-name">Textile & Vêtements — Lomé</div>
-                <div class="project-meta">
-                  <span class="project-meta-item">🇨🇳 Guangzhou</span>
-                  <span class="project-meta-item">→</span>
-                  <span class="project-meta-item">🇹🇬 Lomé</span>
-                  <span class="badge badge-amber" style="margin-left:8px;">En production</span>
-                </div>
-              </div>
-              <div class="project-progress-mini">
-                <div class="mini-bar"><div class="mini-bar-fill" style="width:44%"></div></div>
-                <div class="mini-pct">44% — Étape 4/9</div>
-                <button class="btn-primary btn-sm" style="margin-top:6px;">Voir →</button>
-              </div>
+            <div id="client-projects-summary">
+              <div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>
             </div>
           </div>
 
@@ -823,46 +788,8 @@ textarea.form-control{resize:vertical;min-height:80px;}
               <div class="section-title">Activité récente</div>
             </div>
             <div class="card" style="padding:16px;">
-              <div class="activity-feed">
-                <div class="activity-item">
-                  <div class="activity-dot-col">
-                    <div class="activity-dot" style="background:var(--blue)"></div>
-                    <div class="activity-line"></div>
-                  </div>
-                  <div class="activity-content">
-                    <div class="activity-text">📦 Votre expédition a quitté Shenzhen <strong>#TLS-0047</strong></div>
-                    <div class="activity-time">Aujourd'hui, 14:23</div>
-                  </div>
-                </div>
-                <div class="activity-item">
-                  <div class="activity-dot-col">
-                    <div class="activity-dot" style="background:var(--green)"></div>
-                    <div class="activity-line"></div>
-                  </div>
-                  <div class="activity-content">
-                    <div class="activity-text">✅ Contrôle qualité validé <strong>#TLS-0047</strong></div>
-                    <div class="activity-time">Hier, 10:05</div>
-                  </div>
-                </div>
-                <div class="activity-item">
-                  <div class="activity-dot-col">
-                    <div class="activity-dot" style="background:var(--amber)"></div>
-                    <div class="activity-line"></div>
-                  </div>
-                  <div class="activity-content">
-                    <div class="activity-text">📄 Devis confirmé pour <strong>#TLS-0051</strong></div>
-                    <div class="activity-time">Il y a 2 jours</div>
-                  </div>
-                </div>
-                <div class="activity-item">
-                  <div class="activity-dot-col">
-                    <div class="activity-dot" style="background:var(--green)"></div>
-                  </div>
-                  <div class="activity-content">
-                    <div class="activity-text">🔍 Fournisseur validé <strong>#TLS-0051</strong> — Guangzhou Premium Textiles</div>
-                    <div class="activity-time">Il y a 3 jours</div>
-                  </div>
-                </div>
+              <div class="activity-feed" id="client-activity-feed">
+                <div style="text-align:center;padding:20px;color:var(--silver);font-size:0.85rem;">Chargement...</div>
               </div>
             </div>
           </div>
@@ -877,37 +804,8 @@ textarea.form-control{resize:vertical;min-height:80px;}
             <div class="section-sub">Suivez l'avancement de chaque projet en temps réel</div>
           </div>
         </div>
-        <div class="project-card" onclick="openProjectDetail('TLS-0047')">
-          <div>
-            <div class="project-ref">📦 #TLS-0047</div>
-            <div class="project-name">Électronique & Smartphones</div>
-            <div class="project-meta">
-              <span class="project-meta-item">🇨🇳 Shenzhen → 🇨🇮 Abidjan</span>
-              <span class="project-meta-item">· Qtté: 500 unités</span>
-              <span class="badge badge-blue" style="margin-left:8px;">🚢 En transit</span>
-            </div>
-          </div>
-          <div class="project-progress-mini">
-            <div class="mini-bar"><div class="mini-bar-fill" style="width:78%"></div></div>
-            <div class="mini-pct">Étape 7/9 · 78%</div>
-            <button class="btn-primary btn-sm" style="margin-top:6px;">Voir le projet →</button>
-          </div>
-        </div>
-        <div class="project-card" onclick="openProjectDetail('TLS-0051')">
-          <div>
-            <div class="project-ref">📦 #TLS-0051</div>
-            <div class="project-name">Textile & Vêtements</div>
-            <div class="project-meta">
-              <span class="project-meta-item">🇨🇳 Guangzhou → 🇹🇬 Lomé</span>
-              <span class="project-meta-item">· Qtté: 1 200 pièces</span>
-              <span class="badge badge-amber" style="margin-left:8px;">⚙️ En production</span>
-            </div>
-          </div>
-          <div class="project-progress-mini">
-            <div class="mini-bar"><div class="mini-bar-fill" style="width:44%"></div></div>
-            <div class="mini-pct">Étape 4/9 · 44%</div>
-            <button class="btn-primary btn-sm" style="margin-top:6px;">Voir le projet →</button>
-          </div>
+        <div id="projects-list">
+          <div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>
         </div>
       </div>
 
@@ -971,43 +869,8 @@ textarea.form-control{resize:vertical;min-height:80px;}
           <div class="tab">Expédition</div>
           <div class="tab">Douanes</div>
         </div>
-        <div class="doc-grid">
-          <div class="doc-card" onclick="fakeDownload('Devis_TLS-0047.pdf')">
-            <div class="doc-icon">📋</div>
-            <div class="doc-name">Devis Commercial</div>
-            <div class="doc-meta">#TLS-0047 · 2.3 MB · PDF</div>
-            <button class="doc-dl-btn">⬇ Télécharger</button>
-          </div>
-          <div class="doc-card" onclick="fakeDownload('Facture_TLS-0047.pdf')">
-            <div class="doc-icon">🧾</div>
-            <div class="doc-name">Facture Proforma</div>
-            <div class="doc-meta">#TLS-0047 · 1.1 MB · PDF</div>
-            <button class="doc-dl-btn">⬇ Télécharger</button>
-          </div>
-          <div class="doc-card" onclick="fakeDownload('BL_TLS-0047.pdf')">
-            <div class="doc-icon">🚢</div>
-            <div class="doc-name">Bill of Lading</div>
-            <div class="doc-meta">#TLS-0047 · 800 KB · PDF</div>
-            <button class="doc-dl-btn">⬇ Télécharger</button>
-          </div>
-          <div class="doc-card" onclick="fakeDownload('QC_Report_TLS-0047.pdf')">
-            <div class="doc-icon">✅</div>
-            <div class="doc-name">Rapport Contrôle Qualité</div>
-            <div class="doc-meta">#TLS-0047 · 4.7 MB · PDF</div>
-            <button class="doc-dl-btn">⬇ Télécharger</button>
-          </div>
-          <div class="doc-card" onclick="fakeDownload('Devis_TLS-0051.pdf')">
-            <div class="doc-icon">📋</div>
-            <div class="doc-name">Devis Commercial</div>
-            <div class="doc-meta">#TLS-0051 · 1.8 MB · PDF</div>
-            <button class="doc-dl-btn">⬇ Télécharger</button>
-          </div>
-          <div class="doc-card" onclick="fakeDownload('Fournisseur_TLS-0051.pdf')">
-            <div class="doc-icon">🏭</div>
-            <div class="doc-name">Fiche Fournisseur Validé</div>
-            <div class="doc-meta">#TLS-0051 · 650 KB · PDF</div>
-            <button class="doc-dl-btn">⬇ Télécharger</button>
-          </div>
+        <div class="doc-grid" id="doc-grid">
+          <div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>
         </div>
       </div>
 
@@ -1016,49 +879,11 @@ textarea.form-control{resize:vertical;min-height:80px;}
         <div class="section-header" style="margin-bottom:20px;">
           <div>
             <div class="section-title" style="font-size:1.3rem;">Notifications</div>
-            <div class="section-sub">3 non lues</div>
+            <div class="section-sub">Vos dernières mises à jour</div>
           </div>
-          <button class="btn-secondary btn-sm">Tout marquer comme lu</button>
         </div>
-        <div class="notif-list">
-          <div class="notif-item unread">
-            <div class="notif-item-icon">🚢</div>
-            <div>
-              <div class="notif-item-text"><strong>#TLS-0047</strong> — Votre expédition est en cours. ETA Abidjan : 14 jours.</div>
-              <div class="notif-item-time">Aujourd'hui, 14:23</div>
-            </div>
-            <div class="notif-dot-unread"></div>
-          </div>
-          <div class="notif-item unread">
-            <div class="notif-item-icon">✅</div>
-            <div>
-              <div class="notif-item-text"><strong>#TLS-0047</strong> — Contrôle qualité réussi. Rapport disponible dans Documents.</div>
-              <div class="notif-item-time">Hier, 10:05</div>
-            </div>
-            <div class="notif-dot-unread"></div>
-          </div>
-          <div class="notif-item unread">
-            <div class="notif-item-icon">📄</div>
-            <div>
-              <div class="notif-item-text"><strong>#TLS-0051</strong> — Devis confirmé. Votre commande est en cours de production.</div>
-              <div class="notif-item-time">Il y a 2 jours</div>
-            </div>
-            <div class="notif-dot-unread"></div>
-          </div>
-          <div class="notif-item">
-            <div class="notif-item-icon">🔍</div>
-            <div>
-              <div class="notif-item-text"><strong>#TLS-0051</strong> — Fournisseur validé : Guangzhou Premium Textiles Co. Ltd.</div>
-              <div class="notif-item-time">Il y a 3 jours</div>
-            </div>
-          </div>
-          <div class="notif-item">
-            <div class="notif-item-icon">🎉</div>
-            <div>
-              <div class="notif-item-text">Bienvenue sur l'espace client TLS Global Trade ! Votre compte est actif.</div>
-              <div class="notif-item-time">Il y a 7 jours</div>
-            </div>
-          </div>
+        <div class="notif-list" id="notif-list">
+          <div style="text-align:center;padding:40px;color:var(--silver)">Chargement...</div>
         </div>
       </div>
 
@@ -1071,19 +896,19 @@ textarea.form-control{resize:vertical;min-height:80px;}
             <div class="admin-form">
               <div class="form-group-admin">
                 <label class="form-label-admin">Nom complet</label>
-                <input class="form-control" value="Kofi Asante">
+                <input class="form-control" id="profile-full-name" placeholder="Votre nom complet">
               </div>
               <div class="form-group-admin">
                 <label class="form-label-admin">Email</label>
-                <input class="form-control" placeholder="votre@email.com">
+                <input class="form-control" id="profile-email" placeholder="votre@email.com" disabled>
               </div>
               <div class="form-group-admin">
                 <label class="form-label-admin">Téléphone</label>
-                <input class="form-control" value="+225 07 12 34 56">
+                <input class="form-control" id="profile-phone" placeholder="+225 07 12 34 56">
               </div>
               <div class="form-group-admin">
                 <label class="form-label-admin">Pays</label>
-                <input class="form-control" value="Côte d'Ivoire">
+                <input class="form-control" id="profile-country" placeholder="Votre pays">
               </div>
               <div class="admin-actions-bar">
                 <button class="btn-primary" onclick="saveProfile()">Enregistrer</button>
@@ -1099,7 +924,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
               </div>
               <div class="form-group-admin">
                 <label class="form-label-admin">Nouveau mot de passe</label>
-                <input class="form-control" type="password" placeholder="••••••••">
+                <input class="form-control" id="profile-new-password" type="password" placeholder="••••••••">
               </div>
               <div class="form-group-admin">
                 <label class="form-label-admin">Confirmer le mot de passe</label>
@@ -1133,18 +958,18 @@ textarea.form-control{resize:vertical;min-height:80px;}
           </div>
           <div class="card">
             <div class="card-title">En transit</div>
-            <div class="card-value">1</div>
-            <div class="card-sub">ETA Abidjan : 14 jours</div>
+            <div class="card-value" id="admin-stat-transit">—</div>
+            <div class="card-sub">Expéditions en cours</div>
           </div>
           <div class="card">
             <div class="card-title">En production</div>
-            <div class="card-value">2</div>
-            <div class="card-sub">Guangzhou & Shenzhen</div>
+            <div class="card-value" id="admin-stat-production">—</div>
+            <div class="card-sub">En fabrication</div>
           </div>
           <div class="card">
-            <div class="card-title">Revenus ce mois</div>
-            <div class="card-value">€ —</div>
-            <div class="card-sub">Confidentiel</div>
+            <div class="card-title">Livrés</div>
+            <div class="card-value" id="admin-stat-done">—</div>
+            <div class="card-sub">Projets terminés</div>
           </div>
         </div>
 
@@ -1165,33 +990,8 @@ textarea.form-control{resize:vertical;min-height:80px;}
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td class="td-main">#TLS-0047</td>
-                <td>Kofi Asante</td>
-                <td>Électronique · Abidjan</td>
-                <td><span class="badge badge-blue">En transit</span></td>
-                <td>
-                  <div class="mini-bar" style="width:100px;display:inline-block;"><div class="mini-bar-fill" style="width:78%"></div></div>
-                  <span style="font-size:0.75rem;color:var(--silver);margin-left:6px;">78%</span>
-                </td>
-                <td>
-                  <button class="btn-primary btn-sm" onclick="openAdminProjectEdit('TLS-0047')">Gérer</button>
-                </td>
-              </tr>
-              <tr>
-                <td class="td-main">#TLS-0051</td>
-                <td>Kofi Asante</td>
-                <td>Textile · Lomé</td>
-                <td><span class="badge badge-amber">En production</span></td>
-                <td>
-                  <div class="mini-bar" style="width:100px;display:inline-block;"><div class="mini-bar-fill" style="width:44%"></div></div>
-                  <span style="font-size:0.75rem;color:var(--silver);margin-left:6px;">44%</span>
-                </td>
-                <td>
-                  <button class="btn-primary btn-sm" onclick="openAdminProjectEdit('TLS-0051')">Gérer</button>
-                </td>
-              </tr>
+            <tbody id="admin-recent-projects">
+              <tr><td colspan="6" style="text-align:center;color:var(--silver);padding:20px">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1229,7 +1029,7 @@ textarea.form-control{resize:vertical;min-height:80px;}
         <div id="admin-project-edit" style="display:none;">
           <button class="btn-back" onclick="showPage('admin-projects',null)">← Retour à la liste</button>
 
-          <div class="section-title" style="font-size:1.2rem;margin-bottom:20px;" id="admin-edit-title">Modifier le projet #TLS-0047</div>
+          <div class="section-title" style="font-size:1.2rem;margin-bottom:20px;" id="admin-edit-title">Modifier le projet</div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
             <!-- Statut -->
@@ -1324,31 +1124,8 @@ textarea.form-control{resize:vertical;min-height:80px;}
                 <th>Client</th><th>Email</th><th>Pays</th><th>Projets</th><th>Statut</th><th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td class="td-main">Kofi Asante</td>
-                <td>client@example.com</td>
-                <td>🇨🇮 Côte d'Ivoire</td>
-                <td>2 actifs</td>
-                <td><span class="badge badge-green">Actif</span></td>
-                <td><button class="btn-secondary btn-sm">Voir</button></td>
-              </tr>
-              <tr>
-                <td class="td-main">Mawuli Agbeko</td>
-                <td>m.agbeko@email.com</td>
-                <td>🇹🇬 Togo</td>
-                <td>1 actif</td>
-                <td><span class="badge badge-green">Actif</span></td>
-                <td><button class="btn-secondary btn-sm">Voir</button></td>
-              </tr>
-              <tr>
-                <td class="td-main">Thomas Renard</td>
-                <td>t.renard@email.com</td>
-                <td>🇫🇷 France</td>
-                <td>0</td>
-                <td><span class="badge badge-gray">En attente</span></td>
-                <td><button class="btn-secondary btn-sm">Voir</button></td>
-              </tr>
+            <tbody id="admin-clients-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--silver);padding:20px">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1742,41 +1519,100 @@ function showPage(pageId, navEl) {
 // ══════════════════════════════════════════
 async function loadClientDashboard() {
   const { data: projects } = await sb
-    .from('projects').select('*').eq('client_id', currentUser.id);
-  
-  if (!projects || projects.length === 0) {
-    const el = document.getElementById('client-projects-summary');
-    if (el) el.innerHTML = '<p style="color:var(--silver);text-align:center;padding:24px">Aucun projet en cours.</p>';
-    return;
-  }
+    .from('projects').select('*').eq('client_id', currentUser.id).order('updated_at', {ascending:false});
 
-  // Afficher les projets récents sur le dashboard
-  const el = document.getElementById('client-projects-summary');
-  if (el) {
-    el.innerHTML = projects.slice(0,3).map(p => {
-      const stage = STATUS_MAP[p.current_stage] || STATUS_MAP[0];
-      const pct = Math.round((p.current_stage / 8) * 100);
-      return `
-        <div class="project-row" onclick="openProjectDetail('${p.id}')" style="cursor:pointer;">
-          <div class="project-row-left">
-            <div class="project-ref">${p.reference}</div>
-            <div class="project-name">${p.name}</div>
-          </div>
-          <div class="project-row-right">
-            <span class="badge ${stage.badge}">${stage.label}</span>
-            <div class="mini-progress"><div style="width:${pct}%"></div></div>
-          </div>
-        </div>`;
-    }).join('');
-  }
+  const activeCount = projects?.filter(p => p.current_stage < 8).length || 0;
+  const doneCount   = projects?.filter(p => p.current_stage === 8).length || 0;
 
-  // Stats
-  const activeCount = projects.filter(p => p.current_stage < 8).length;
-  const doneCount = projects.filter(p => p.current_stage === 8).length;
   const statA = document.getElementById('stat-active');
   const statD = document.getElementById('stat-done');
   if (statA) statA.textContent = activeCount;
   if (statD) statD.textContent = doneCount;
+
+  // Doc count
+  if (projects && projects.length > 0) {
+    const ids = projects.map(p => p.id);
+    const { data: docs } = await sb.from('documents').select('id').in('project_id', ids);
+    const statDocs = document.getElementById('stat-docs');
+    if (statDocs) statDocs.textContent = docs?.length || 0;
+  }
+
+  // Dernière mise à jour
+  const { data: lastUpdate } = await sb
+    .from('project_updates').select('*, projects(reference)')
+    .in('project_id', projects?.map(p => p.id) || [])
+    .order('created_at', {ascending:false}).limit(1).maybeSingle();
+
+  const statLU    = document.getElementById('stat-last-update');
+  const statLUSub = document.getElementById('stat-last-update-sub');
+  if (lastUpdate && statLU) {
+    const diff = Math.round((Date.now() - new Date(lastUpdate.created_at)) / 60000);
+    statLU.textContent = diff < 60 ? `Il y a ${diff} min` : diff < 1440 ? `Il y a ${Math.round(diff/60)}h` : `Il y a ${Math.round(diff/1440)} j`;
+    if (statLUSub) statLUSub.textContent = lastUpdate.message?.slice(0, 40) + '...';
+  } else if (statLU) {
+    statLU.textContent = '—';
+  }
+
+  // Projets résumé
+  const el = document.getElementById('client-projects-summary');
+  if (el) {
+    if (!projects || projects.length === 0) {
+      el.innerHTML = '<p style="color:var(--silver);text-align:center;padding:24px">Aucun projet en cours.</p>';
+    } else {
+      el.innerHTML = projects.slice(0,3).map(p => {
+        const stage = STATUS_MAP[p.current_stage] || STATUS_MAP[0];
+        const pct = Math.round((p.current_stage / 8) * 100);
+        return `
+          <div class="project-card" onclick="openProjectDetail('${p.id}')" style="cursor:pointer;">
+            <div>
+              <div class="project-ref">📦 ${p.reference}</div>
+              <div class="project-name">${p.name}</div>
+              <div class="project-meta">
+                <span class="project-meta-item">🇨🇳 ${p.origin_country || 'Chine'}</span>
+                <span class="project-meta-item">→</span>
+                <span class="project-meta-item">${p.destination_country || 'N/A'}</span>
+                <span class="badge ${stage.badge}" style="margin-left:8px;">${stage.label}</span>
+              </div>
+            </div>
+            <div class="project-progress-mini">
+              <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+              <div class="mini-pct">${pct}% — Étape ${p.current_stage+1}/9</div>
+              <button class="btn-primary btn-sm" style="margin-top:6px;">Voir →</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+  }
+
+  // Activité récente (notifications)
+  const actEl = document.getElementById('client-activity-feed');
+  if (actEl) {
+    const { data: notifs } = await sb
+      .from('notifications').select('*').eq('client_id', currentUser.id)
+      .order('created_at', {ascending:false}).limit(5);
+
+    if (!notifs || notifs.length === 0) {
+      actEl.innerHTML = '<div style="color:var(--mist);font-size:0.85rem;text-align:center;padding:16px;">Aucune activité récente.</div>';
+    } else {
+      const colors = ['var(--blue)','var(--green)','var(--amber)','var(--blue)','var(--green)'];
+      actEl.innerHTML = notifs.map((n, i) => {
+        const diff = Math.round((Date.now() - new Date(n.created_at)) / 60000);
+        const timeStr = diff < 60 ? `Il y a ${diff} min` : diff < 1440 ? `Il y a ${Math.round(diff/60)}h` : `Il y a ${Math.round(diff/1440)} j`;
+        const isLast = i === notifs.length - 1;
+        return `
+          <div class="activity-item">
+            <div class="activity-dot-col">
+              <div class="activity-dot" style="background:${colors[i % colors.length]}"></div>
+              ${!isLast ? '<div class="activity-line"></div>' : ''}
+            </div>
+            <div class="activity-content">
+              <div class="activity-text">${n.message}</div>
+              <div class="activity-time">${timeStr}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1981,26 +1817,43 @@ async function loadAdminDashboard() {
   const { data: projects } = await sb.from('projects').select('*');
   const { data: clients } = await sb.from('profiles').select('*').eq('role', 'client');
 
-  const statProj = document.getElementById('admin-stat-projects');
-  const statClients = document.getElementById('admin-stat-clients');
-  const statActive = document.getElementById('admin-stat-active');
-  if (statProj) statProj.textContent = projects?.length || 0;
-  if (statClients) statClients.textContent = clients?.length || 0;
-  if (statActive) statActive.textContent = projects?.filter(p => p.current_stage < 8).length || 0;
+  const statProj       = document.getElementById('admin-stat-projects');
+  const statClients    = document.getElementById('admin-stat-clients');
+  const statActive     = document.getElementById('admin-stat-active');
+  const statTransit    = document.getElementById('admin-stat-transit');
+  const statProduction = document.getElementById('admin-stat-production');
+  const statDone       = document.getElementById('admin-stat-done');
+
+  if (statProj)       statProj.textContent       = projects?.length || 0;
+  if (statClients)    statClients.textContent     = clients?.length || 0;
+  if (statActive)     statActive.textContent      = projects?.filter(p => p.current_stage < 8).length || 0;
+  if (statTransit)    statTransit.textContent     = projects?.filter(p => p.current_stage === 6).length || 0;
+  if (statProduction) statProduction.textContent  = projects?.filter(p => p.current_stage === 3).length || 0;
+  if (statDone)       statDone.textContent        = projects?.filter(p => p.current_stage === 8).length || 0;
 
   // Recent projects
   const recentEl = document.getElementById('admin-recent-projects');
   if (recentEl && projects) {
-    recentEl.innerHTML = projects.slice(0,5).map(p => {
-      const stage = STATUS_MAP[p.current_stage] || STATUS_MAP[0];
-      return `
-        <tr onclick="openAdminProjectDetail('${p.id}')" style="cursor:pointer">
-          <td>${p.reference}</td>
-          <td>${p.name}</td>
-          <td><span class="badge ${stage.badge}">${stage.label}</span></td>
-          <td>${new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
-        </tr>`;
-    }).join('');
+    if (projects.length === 0) {
+      recentEl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--silver);padding:20px">Aucun projet.</td></tr>';
+    } else {
+      recentEl.innerHTML = projects.slice(0,5).map(p => {
+        const stage = STATUS_MAP[p.current_stage] || STATUS_MAP[0];
+        const pct = Math.round((p.current_stage / 8) * 100);
+        return `
+          <tr>
+            <td class="td-main">${p.reference}</td>
+            <td>${p.profiles?.full_name || p.profiles?.email || 'N/A'}</td>
+            <td>${p.product_type || 'N/A'}</td>
+            <td><span class="badge ${stage.badge}">${stage.label}</span></td>
+            <td>
+              <div class="mini-bar" style="width:100px;display:inline-block;"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+              <span style="font-size:0.75rem;color:var(--silver);margin-left:6px;">${pct}%</span>
+            </td>
+            <td><button class="btn-primary btn-sm" onclick="openAdminProjectDetail('${p.id}')">Gérer</button></td>
+          </tr>`;
+      }).join('');
+    }
   }
 }
 
